@@ -103,6 +103,7 @@ export const en: Messages = {
   'add.locationDesktopHint': 'Click the map to place it',
   'add.locationChangeHint': 'click the map to move it',
   'add.locationNone': 'No location yet',
+  'add.locationTapHint': 'Tap the map to drop the pin',
   'add.locationPick': 'Pick on the map',
   'add.locationDone': 'Done',
   'add.photoStep': '2. Choose a photo',

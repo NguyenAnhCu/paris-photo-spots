@@ -103,6 +103,7 @@ export const fr: Messages = {
   'add.locationDesktopHint': 'Cliquez sur la carte pour le placer',
   'add.locationChangeHint': 'cliquez sur la carte pour le déplacer',
   'add.locationNone': 'Pas encore d’emplacement',
+  'add.locationTapHint': 'Touchez la carte pour placer le repère',
   'add.locationPick': 'Choisir sur la carte',
   'add.locationDone': 'OK',
   'add.photoStep': '2. Choisir une photo',

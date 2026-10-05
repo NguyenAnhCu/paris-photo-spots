@@ -77,6 +77,7 @@
   flex: none;
 }
 .search input {
+  align-self: stretch; /* the whole pill height is the tap target */
   border: 0;
   background: transparent;
   outline: none;
@@ -137,4 +138,11 @@
 }
 .filter--column {
   flex-direction: column;
+}
+
+@media (pointer: coarse) {
+  .search,
+  .search--column {
+    height: var(--tap-min);
+  }
 }

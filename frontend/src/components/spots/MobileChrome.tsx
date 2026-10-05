@@ -1,5 +1,6 @@
 // Tablet/mobile chrome (< 1000px): header, floating "Danh sách | Bản đồ" switch, mini card, placement bar.
 import { ArrowRight, CirclePlus, List, Map as MapIcon } from 'lucide-react'
+import { useState } from 'react'
 import { useI18n } from '@/i18n/useI18n'
 import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '@/i18n/keys'
 import { CROWD_LEVEL_LABEL } from '@/lib/crowd'
@@ -44,8 +45,8 @@ export function BottomSegmented() {
     { id: 'map' as const, label: t('nav.map'), icon: MapIcon },
   ]
   return (
-    <div className="segmented-wrap">
-      <div className="segmented" role="tablist" aria-label={t('nav.views')}>
+    <nav className="segmented-wrap" aria-label={t('nav.views')}>
+      <div className="segmented" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -60,7 +61,7 @@ export function BottomSegmented() {
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   )
 }
 
@@ -84,12 +85,23 @@ export function MiniSpotCard({ spot, onOpen }: { spot: SpotSummary; onOpen: () =
 
 export function PlacingBar() {
   const { t } = useI18n()
-  const { placement, setPickingOnMap } = useMapUi()
-  const position = placement?.position
+  const { placement, setPlacement, setPickingOnMap } = useMapUi()
+  const position = placement?.position ?? null
+  // Cancel puts back the location the form had before the full-screen map opened.
+  const [initial] = useState(position)
+  const cancel = () => {
+    setPlacement((cur) => (cur ? { ...cur, position: initial } : cur))
+    setPickingOnMap(false)
+  }
   return (
-    <div className="placing-bar" role="status">
-      <span>{position ? formatCoords(position[1], position[0]) : t('add.locationNone')}</span>
-      <PillButton variant="primary" onClick={() => setPickingOnMap(false)}>
+    <div className="placing-bar">
+      <span className="placing-bar__text" role="status">
+        {position ? formatCoords(position[1], position[0]) : t('add.locationTapHint')}
+      </span>
+      <PillButton variant="dark" onClick={cancel} className="placing-bar__cancel">
+        {t('common.cancel')}
+      </PillButton>
+      <PillButton variant="primary" onClick={() => setPickingOnMap(false)} disabled={!position}>
         {t('add.locationDone')}
       </PillButton>
     </div>
