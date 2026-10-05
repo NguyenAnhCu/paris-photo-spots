@@ -42,7 +42,7 @@ const CLUSTER_COUNT = 'spot-cluster-count'
 const PINS = 'spot-pins'
 const PINS_ACTIVE = 'spot-pins-active'
 const CLUSTER_MAX_ZOOM = 13
-const CLUSTER_RADIUS = 46
+const CLUSTER_RADIUS = 64 // px; 46 was too dense for ~260 spots at the default zoom (user choice 2026-10-05)
 const FLY_DURATION_MS = 800
 
 const clusterLayer: LayerProps = {
