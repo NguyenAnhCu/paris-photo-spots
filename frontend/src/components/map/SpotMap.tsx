@@ -12,6 +12,7 @@ import {
   type MapRef,
 } from '@vis.gl/react-maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import './maplibreWorker'
 import type { ExpressionSpecification, GeoJSONSource } from 'maplibre-gl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { config } from '@/config'
@@ -41,7 +42,7 @@ const CLUSTER_COUNT = 'spot-cluster-count'
 const PINS = 'spot-pins'
 const PINS_ACTIVE = 'spot-pins-active'
 const CLUSTER_MAX_ZOOM = 13
-const CLUSTER_RADIUS = 46
+const CLUSTER_RADIUS = 64 // px; 46 was too dense for ~260 spots at the default zoom (user choice 2026-10-05)
 const FLY_DURATION_MS = 800
 
 const clusterLayer: LayerProps = {
@@ -68,7 +69,17 @@ const clusterCountLayer: LayerProps = {
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft, onSelect, onHover, onPlace }: SpotMapProps) {
+export function SpotMap({
+  spots,
+  activeIds,
+  focus,
+  leftPadding,
+  showZoom,
+  draft,
+  onSelect,
+  onHover,
+  onPlace,
+}: SpotMapProps) {
   const { t } = useI18n()
   const mapRef = useRef<MapRef>(null)
   const [imagesReady, setImagesReady] = useState(false)
@@ -171,7 +182,8 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
   const handleMove = useCallback(
     (e: MapLayerMouseEvent) => {
       const feature = e.features?.[0]
-      const id = feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
+      const id =
+        feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
       const canvas = mapRef.current?.getMap().getCanvas()
       if (canvas) canvas.style.cursor = onPlace ? 'crosshair' : feature ? 'pointer' : ''
       if (hovered.current !== id) {

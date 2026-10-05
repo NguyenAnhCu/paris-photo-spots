@@ -2,7 +2,16 @@
 // Mirrors the backend API contract (snake_case on the wire, camelCase here).
 import type { FeatureCollection, Point } from 'geojson'
 
-export const SPOT_CATEGORIES = ['landmark', 'street', 'skyline', 'bridge', 'park', 'rooftop', 'wedding', 'suburb'] as const
+export const SPOT_CATEGORIES = [
+  'landmark',
+  'street',
+  'skyline',
+  'bridge',
+  'park',
+  'rooftop',
+  'wedding',
+  'suburb',
+] as const
 export type SpotCategory = (typeof SPOT_CATEGORIES)[number]
 
 export type CrowdLevel = 1 | 2 | 3 // 1 Vắng · 2 Vừa · 3 Đông (estimate, set by the team)

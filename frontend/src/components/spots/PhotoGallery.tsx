@@ -13,7 +13,9 @@ import './PhotoGallery.css'
 
 export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 3 | 4 }) {
   const { t, locale } = useI18n()
-  const { data, isPending, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useSpotPhotos(spot.id)
+  const { data, isPending, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useSpotPhotos(
+    spot.id,
+  )
   const photos = data?.pages.flatMap((p) => p.items) ?? []
   const total = data?.pages[0]?.total ?? spot.photoCount
   const [index, setIndex] = useState<number | null>(null)
@@ -69,7 +71,11 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
               <PillButton variant="tonal" icon={LayoutGrid} onClick={() => setIndex(null)}>
                 {t('photos.grid')}
               </PillButton>
-              <IconButton icon={ChevronRight} label={t('photos.next')} onClick={() => setIndex((index + 1) % photos.length)} />
+              <IconButton
+                icon={ChevronRight}
+                label={t('photos.next')}
+                onClick={() => setIndex((index + 1) % photos.length)}
+              />
             </div>
           </div>
           <ExifPills photo={current} />

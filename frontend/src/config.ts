@@ -2,7 +2,7 @@ import type { BBox, LngLat } from './lib/geo'
 
 export const config = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '',
-  // Warm paper-toned vector style (F2). Built on OpenFreeMap "liberty" (no API key), recoloured to the tokens.
+  // Light, quiet vector style built from OpenFreeMap "positron" (no API key): scripts/build-map-style.mjs.
   mapStyleUrl: import.meta.env.VITE_MAP_STYLE_URL || '/map-style.json',
   defaultCenter: [2.3322, 48.8566] satisfies LngLat as LngLat, // design: map opens on central Paris
   defaultZoom: 12,

@@ -62,12 +62,21 @@ export function DevPage() {
         <div className="dev__tiles">
           <StatTile icon={Users} label={t('detail.crowd')} value={t('crowd.busy')} />
           <StatTile icon={Clock} label={t('detail.bestTime')} value={t('bestTime.sunrise')} />
-          <StatTile icon={Cloud} label={t('detail.weather')} value={t('weather.value', { temp: 21, label: t('weather.cloudy') })} />
+          <StatTile
+            icon={Cloud}
+            label={t('detail.weather')}
+            value={t('weather.value', { temp: 21, label: t('weather.cloudy') })}
+          />
         </div>
         <div className="dev__tiles">
           <StatTile stacked icon={Users} label={t('detail.crowd')} value={t('crowd.busy')} />
           <StatTile stacked icon={Clock} label={t('detail.bestTime')} value={t('bestTime.sunrise')} />
-          <StatTile stacked icon={Cloud} label={t('detail.weather')} value={t('weather.value', { temp: 21, label: t('weather.cloudy') })} />
+          <StatTile
+            stacked
+            icon={Cloud}
+            label={t('detail.weather')}
+            value={t('weather.value', { temp: 21, label: t('weather.cloudy') })}
+          />
         </div>
       </section>
     </main>

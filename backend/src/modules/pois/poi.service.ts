@@ -15,7 +15,11 @@ export const poiService = {
     const rings = body.polygon.type === 'Polygon' ? body.polygon.coordinates : body.polygon.coordinates.flat()
     const vertices = countPolygonVertices(rings)
     if (vertices > env.MAX_POLYGON_VERTICES) {
-      throw new AppError('POLYGON_TOO_COMPLEX', 400, `Polygon has ${vertices} vertices, max ${env.MAX_POLYGON_VERTICES}`)
+      throw new AppError(
+        'POLYGON_TOO_COMPLEX',
+        400,
+        `Polygon has ${vertices} vertices, max ${env.MAX_POLYGON_VERTICES}`,
+      )
     }
     return featureCollection(
       await poiRepository.within({

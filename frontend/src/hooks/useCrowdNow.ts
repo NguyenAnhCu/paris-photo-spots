@@ -6,7 +6,9 @@ const PARIS_TZ = 'Europe/Paris'
 
 // The spots are in Paris: "now" is Paris time even when planning from abroad.
 export function parisHour(date = new Date()): number {
-  return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: PARIS_TZ }).format(date))
+  return Number(
+    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: PARIS_TZ }).format(date),
+  )
 }
 
 export function useCrowdNow(spotId: string, crowdLevel: CrowdLevel, sunsetPeak: boolean) {
