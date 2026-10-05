@@ -27,7 +27,8 @@ export function crowdProfile(crowdLevel: CrowdLevel, sunsetPeak: boolean, seed: 
   for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
     const jitter = (((seed * 7 + hour * 13) % 10) / 9) * JITTER_MAX
     let value =
-      (crowdLevel / 3) * (BASE_SHARE + (1 - BASE_SHARE) * Math.exp(-((hour - PEAK_HOUR) ** 2) / (2 * PEAK_SIGMA ** 2))) +
+      (crowdLevel / 3) *
+        (BASE_SHARE + (1 - BASE_SHARE) * Math.exp(-((hour - PEAK_HOUR) ** 2) / (2 * PEAK_SIGMA ** 2))) +
       jitter
     if (sunsetPeak) value += SUNSET_WEIGHT * Math.exp(-((hour - SUNSET_HOUR) ** 2) / 4)
     raw.push({ hour, value })

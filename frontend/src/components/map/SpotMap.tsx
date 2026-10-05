@@ -69,7 +69,17 @@ const clusterCountLayer: LayerProps = {
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft, onSelect, onHover, onPlace }: SpotMapProps) {
+export function SpotMap({
+  spots,
+  activeIds,
+  focus,
+  leftPadding,
+  showZoom,
+  draft,
+  onSelect,
+  onHover,
+  onPlace,
+}: SpotMapProps) {
   const { t } = useI18n()
   const mapRef = useRef<MapRef>(null)
   const [imagesReady, setImagesReady] = useState(false)
@@ -172,7 +182,8 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
   const handleMove = useCallback(
     (e: MapLayerMouseEvent) => {
       const feature = e.features?.[0]
-      const id = feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
+      const id =
+        feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
       const canvas = mapRef.current?.getMap().getCanvas()
       if (canvas) canvas.style.cursor = onPlace ? 'crosshair' : feature ? 'pointer' : ''
       if (hovered.current !== id) {

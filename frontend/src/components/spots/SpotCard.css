@@ -17,7 +17,10 @@
   flex: none;
   border-radius: var(--r-card);
   box-shadow: var(--shadow-card);
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 .spot-card--overlay .spot-card__photo {
   position: absolute;
@@ -82,7 +85,9 @@
 .spot-card--stacked {
   border-color: var(--divider);
   border-radius: var(--r-card);
-  transition: box-shadow 0.2s, border-color 0.2s;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
 }
 .spot-card--stacked:hover,
 .spot-card--stacked[data-active='true'] {

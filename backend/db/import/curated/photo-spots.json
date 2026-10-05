@@ -1,20 +1,160 @@
 {
   "_comment": "Curated photo spots from the design (2026-10-05). bestTime is a code translated by the frontend i18n: sunrise | early_morning | midday | late_afternoon | sunset. matchName (optional) helps match the OSM POI when the designer's name differs. Add rooftop / wedding spots here: OSM has almost none.",
   "spots": [
-    { "id": "p0", "name": "Trocadéro", "matchName": "Trocadéro", "category": "landmark", "lat": 48.8616, "lng": 2.2893, "crowdLevel": 3, "bestTime": "sunrise", "tip": "Sáng sớm trước 7h gần như không có người. Chụp tháp Eiffel từ lan can giữa, ống kính 24–35mm." },
-    { "id": "p1", "name": "Pont Alexandre III", "category": "bridge", "lat": 48.8638, "lng": 2.3136, "crowdLevel": 2, "bestTime": "sunrise", "tip": "Đèn đồng và tượng mạ vàng đẹp nhất lúc sáng sớm. Đứng giữa cầu, chụp dọc về phía Invalides." },
-    { "id": "p2", "name": "Cầu thang Sacré-Cœur", "matchName": "Sacré-Cœur", "category": "skyline", "lat": 48.8867, "lng": 2.3431, "crowdLevel": 3, "bestTime": "sunset", "tip": "Nhìn toàn cảnh Paris từ bậc thang phía trước nhà thờ. Đến sớm 1 giờ để có chỗ." },
-    { "id": "p3", "name": "Rue Crémieux", "category": "street", "lat": 48.8503, "lng": 2.3735, "crowdLevel": 2, "bestTime": "early_morning", "tip": "Phố nhà pastel. Khách thường xuyên, nên tránh cuối tuần. Lưu ý tôn trọng cư dân." },
-    { "id": "p4", "name": "Colonnes de Buren", "category": "landmark", "lat": 48.8637, "lng": 2.337, "crowdLevel": 2, "bestTime": "midday", "tip": "Hàng cột sọc đen trắng trong sân Palais-Royal. Hợp ảnh chân dung và thời trang." },
-    { "id": "p5", "name": "Pyramide du Louvre", "category": "landmark", "lat": 48.8606, "lng": 2.3376, "crowdLevel": 3, "bestTime": "sunset", "tip": "Kính phản chiếu rất mạnh lúc blue hour. Chụp thấp, góc rộng." },
-    { "id": "p6", "name": "Jardin du Luxembourg", "category": "park", "lat": 48.8462, "lng": 2.3371, "crowdLevel": 1, "bestTime": "late_afternoon", "tip": "Ghế sắt xanh và hồ nước giữa vườn. Ánh sáng xuyên tán cây đẹp vào mùa thu." },
-    { "id": "p7", "name": "Pont des Arts", "category": "bridge", "lat": 48.8583, "lng": 2.3375, "crowdLevel": 2, "bestTime": "sunset", "tip": "Nhìn xuôi sông Seine về phía Île de la Cité lúc mặt trời lặn." },
-    { "id": "p8", "name": "Rooftop Printemps", "matchName": "Printemps", "category": "rooftop", "lat": 48.8738, "lng": 2.3282, "crowdLevel": 1, "bestTime": "sunset", "tip": "Miễn phí, nhìn thẳng ra Opéra Garnier và tháp Eiffel phía xa. Đóng cửa khi mưa." },
-    { "id": "p9", "name": "Château de Versailles", "category": "suburb", "lat": 48.8049, "lng": 2.1204, "crowdLevel": 3, "bestTime": "early_morning", "tip": "Vườn Versailles mở sớm. Cần giấy phép nếu dùng tripod hoặc chụp thương mại." },
-    { "id": "p10", "name": "Vườn Monet, Giverny", "matchName": "Monet Giverny", "category": "suburb", "lat": 49.0757, "lng": 1.5339, "crowdLevel": 2, "bestTime": "early_morning", "tip": "Cách Paris khoảng 1 giờ đi tàu. Hoa nở đẹp nhất từ tháng 5 đến tháng 9." },
-    { "id": "p11", "name": "Pont de Bir-Hakeim", "category": "wedding", "lat": 48.8556, "lng": 2.2879, "crowdLevel": 1, "bestTime": "sunrise", "tip": "Vòm thép và tàu điện trên cao, phổ biến cho ảnh cưới. Đi sớm để tránh đoàn chụp khác." },
-    { "id": "p12", "name": "Buttes-Chaumont", "matchName": "Parc des Buttes-Chaumont", "category": "park", "lat": 48.8809, "lng": 2.3828, "crowdLevel": 1, "bestTime": "late_afternoon", "tip": "Đền Sibyl trên vách đá và cầu treo. Ít khách hơn các điểm trung tâm." },
-    { "id": "p13", "name": "Tour Montparnasse", "category": "skyline", "lat": 48.8421, "lng": 2.322, "crowdLevel": 2, "bestTime": "sunset", "tip": "Đài quan sát tầng 56 là điểm duy nhất không có tòa tháp trong khung hình Eiffel." },
-    { "id": "p14", "name": "Parc de Bagatelle", "category": "wedding", "lat": 48.8672, "lng": 2.249, "crowdLevel": 1, "bestTime": "midday", "tip": "Vườn hồng và lâu đài nhỏ. Có phí vào cửa, cần liên hệ trước cho ảnh cưới." }
+    {
+      "id": "p0",
+      "name": "Trocadéro",
+      "matchName": "Trocadéro",
+      "category": "landmark",
+      "lat": 48.8616,
+      "lng": 2.2893,
+      "crowdLevel": 3,
+      "bestTime": "sunrise",
+      "tip": "Sáng sớm trước 7h gần như không có người. Chụp tháp Eiffel từ lan can giữa, ống kính 24–35mm."
+    },
+    {
+      "id": "p1",
+      "name": "Pont Alexandre III",
+      "category": "bridge",
+      "lat": 48.8638,
+      "lng": 2.3136,
+      "crowdLevel": 2,
+      "bestTime": "sunrise",
+      "tip": "Đèn đồng và tượng mạ vàng đẹp nhất lúc sáng sớm. Đứng giữa cầu, chụp dọc về phía Invalides."
+    },
+    {
+      "id": "p2",
+      "name": "Cầu thang Sacré-Cœur",
+      "matchName": "Sacré-Cœur",
+      "category": "skyline",
+      "lat": 48.8867,
+      "lng": 2.3431,
+      "crowdLevel": 3,
+      "bestTime": "sunset",
+      "tip": "Nhìn toàn cảnh Paris từ bậc thang phía trước nhà thờ. Đến sớm 1 giờ để có chỗ."
+    },
+    {
+      "id": "p3",
+      "name": "Rue Crémieux",
+      "category": "street",
+      "lat": 48.8503,
+      "lng": 2.3735,
+      "crowdLevel": 2,
+      "bestTime": "early_morning",
+      "tip": "Phố nhà pastel. Khách thường xuyên, nên tránh cuối tuần. Lưu ý tôn trọng cư dân."
+    },
+    {
+      "id": "p4",
+      "name": "Colonnes de Buren",
+      "category": "landmark",
+      "lat": 48.8637,
+      "lng": 2.337,
+      "crowdLevel": 2,
+      "bestTime": "midday",
+      "tip": "Hàng cột sọc đen trắng trong sân Palais-Royal. Hợp ảnh chân dung và thời trang."
+    },
+    {
+      "id": "p5",
+      "name": "Pyramide du Louvre",
+      "category": "landmark",
+      "lat": 48.8606,
+      "lng": 2.3376,
+      "crowdLevel": 3,
+      "bestTime": "sunset",
+      "tip": "Kính phản chiếu rất mạnh lúc blue hour. Chụp thấp, góc rộng."
+    },
+    {
+      "id": "p6",
+      "name": "Jardin du Luxembourg",
+      "category": "park",
+      "lat": 48.8462,
+      "lng": 2.3371,
+      "crowdLevel": 1,
+      "bestTime": "late_afternoon",
+      "tip": "Ghế sắt xanh và hồ nước giữa vườn. Ánh sáng xuyên tán cây đẹp vào mùa thu."
+    },
+    {
+      "id": "p7",
+      "name": "Pont des Arts",
+      "category": "bridge",
+      "lat": 48.8583,
+      "lng": 2.3375,
+      "crowdLevel": 2,
+      "bestTime": "sunset",
+      "tip": "Nhìn xuôi sông Seine về phía Île de la Cité lúc mặt trời lặn."
+    },
+    {
+      "id": "p8",
+      "name": "Rooftop Printemps",
+      "matchName": "Printemps",
+      "category": "rooftop",
+      "lat": 48.8738,
+      "lng": 2.3282,
+      "crowdLevel": 1,
+      "bestTime": "sunset",
+      "tip": "Miễn phí, nhìn thẳng ra Opéra Garnier và tháp Eiffel phía xa. Đóng cửa khi mưa."
+    },
+    {
+      "id": "p9",
+      "name": "Château de Versailles",
+      "category": "suburb",
+      "lat": 48.8049,
+      "lng": 2.1204,
+      "crowdLevel": 3,
+      "bestTime": "early_morning",
+      "tip": "Vườn Versailles mở sớm. Cần giấy phép nếu dùng tripod hoặc chụp thương mại."
+    },
+    {
+      "id": "p10",
+      "name": "Vườn Monet, Giverny",
+      "matchName": "Monet Giverny",
+      "category": "suburb",
+      "lat": 49.0757,
+      "lng": 1.5339,
+      "crowdLevel": 2,
+      "bestTime": "early_morning",
+      "tip": "Cách Paris khoảng 1 giờ đi tàu. Hoa nở đẹp nhất từ tháng 5 đến tháng 9."
+    },
+    {
+      "id": "p11",
+      "name": "Pont de Bir-Hakeim",
+      "category": "wedding",
+      "lat": 48.8556,
+      "lng": 2.2879,
+      "crowdLevel": 1,
+      "bestTime": "sunrise",
+      "tip": "Vòm thép và tàu điện trên cao, phổ biến cho ảnh cưới. Đi sớm để tránh đoàn chụp khác."
+    },
+    {
+      "id": "p12",
+      "name": "Buttes-Chaumont",
+      "matchName": "Parc des Buttes-Chaumont",
+      "category": "park",
+      "lat": 48.8809,
+      "lng": 2.3828,
+      "crowdLevel": 1,
+      "bestTime": "late_afternoon",
+      "tip": "Đền Sibyl trên vách đá và cầu treo. Ít khách hơn các điểm trung tâm."
+    },
+    {
+      "id": "p13",
+      "name": "Tour Montparnasse",
+      "category": "skyline",
+      "lat": 48.8421,
+      "lng": 2.322,
+      "crowdLevel": 2,
+      "bestTime": "sunset",
+      "tip": "Đài quan sát tầng 56 là điểm duy nhất không có tòa tháp trong khung hình Eiffel."
+    },
+    {
+      "id": "p14",
+      "name": "Parc de Bagatelle",
+      "category": "wedding",
+      "lat": 48.8672,
+      "lng": 2.249,
+      "crowdLevel": 1,
+      "bestTime": "midday",
+      "tip": "Vườn hồng và lâu đài nhỏ. Có phí vào cửa, cần liên hệ trước cho ảnh cưới."
+    }
   ]
 }

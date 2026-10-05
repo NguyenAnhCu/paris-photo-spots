@@ -24,4 +24,3 @@ export function I18nProvider({ initialLocale, children }: { initialLocale?: Loca
   const value = useMemo(() => ({ locale, setLocale, t: createTranslator(locale) }), [locale, setLocale])
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }
-

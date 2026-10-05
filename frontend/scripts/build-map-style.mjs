@@ -57,7 +57,8 @@ function recolor(layer) {
       else if (id.includes('casing')) set(layer, 'line-color', C.roadCasing)
       else if (id.includes('subtle')) set(layer, 'line-color', C.roadSubtle)
       else if (id.includes('motorway') || id.includes('major')) set(layer, 'line-color', C.roadMajor)
-      else if (id.startsWith('highway') || id.startsWith('road') || id.startsWith('tunnel')) set(layer, 'line-color', C.road)
+      else if (id.startsWith('highway') || id.startsWith('road') || id.startsWith('tunnel'))
+        set(layer, 'line-color', C.road)
       else if (id.startsWith('aeroway')) set(layer, 'line-color', C.aeroway)
       return
     case 'symbol': {

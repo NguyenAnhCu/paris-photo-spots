@@ -1,12 +1,6 @@
 // Accent-insensitive search (typing "Cau" must find "Cầu", "eglise" must find "Église").
 export function normalizeText(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd')
-    .replace(/Đ/g, 'D')
-    .toLowerCase()
-    .trim()
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim()
 }
 
 // Every word of the query must appear somewhere in one of the fields.

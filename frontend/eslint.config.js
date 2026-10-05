@@ -15,7 +15,10 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // Deep relative paths are hard to read and break when files move: use the "@/" alias for anything outside the folder.
-      'no-restricted-imports': ['error', { patterns: [{ group: ['../*'], message: 'Use the "@/..." alias instead of "../".' }] }],
+      'no-restricted-imports': [
+        'error',
+        { patterns: [{ group: ['../*'], message: 'Use the "@/..." alias instead of "../".' }] },
+      ],
     },
   },
   {

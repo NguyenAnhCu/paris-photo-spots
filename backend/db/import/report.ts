@@ -17,10 +17,17 @@ async function main() {
        FROM pois WHERE deleted_at IS NULL AND photo_category IS NOT NULL
        GROUP BY photo_category ORDER BY n DESC`,
     )
-    console.table(counts.map((r) => ({ category: r.photo_category, spots: Number(r.n), with_cover: Number(r.with_cover) })))
+    console.table(
+      counts.map((r) => ({ category: r.photo_category, spots: Number(r.n), with_cover: Number(r.with_cover) })),
+    )
 
     for (const { photo_category: cat } of counts) {
-      const { rows } = await client.query<{ name: string; vi: string | null; popularity: number | null; curated: boolean }>(
+      const { rows } = await client.query<{
+        name: string
+        vi: string | null
+        popularity: number | null
+        curated: boolean
+      }>(
         `SELECT name, name_i18n->>'vi' AS vi, popularity,
                 EXISTS (SELECT 1 FROM unnest(tags) t WHERE t LIKE 'curated:%') AS curated
          FROM pois WHERE deleted_at IS NULL AND photo_category = $1
@@ -28,7 +35,9 @@ async function main() {
         [cat, top],
       )
       console.log(`\n── ${cat}`)
-      console.table(rows.map((r) => ({ name: r.name, vi: r.vi ?? '', popularity: r.popularity, curated: r.curated ? '★' : '' })))
+      console.table(
+        rows.map((r) => ({ name: r.name, vi: r.vi ?? '', popularity: r.popularity, curated: r.curated ? '★' : '' })),
+      )
     }
   } finally {
     await client.end()

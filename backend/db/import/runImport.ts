@@ -38,12 +38,10 @@ export async function runImport(client: pg.ClientBase, ctx: ImportContext): Prom
   )
   const runId = runRows[0]?.id ?? ''
   const finish = async (status: RunStatus, exitCode: number, stats: RunStats, error: string | null = null) => {
-    await client.query(`UPDATE import_runs SET status = $2, stats = $3, error = $4, finished_at = NOW() WHERE id = $1`, [
-      runId,
-      status,
-      JSON.stringify(stats),
-      error,
-    ])
+    await client.query(
+      `UPDATE import_runs SET status = $2, stats = $3, error = $4, finished_at = NOW() WHERE id = $1`,
+      [runId, status, JSON.stringify(stats), error],
+    )
     return { runId, status, exitCode, stats, error }
   }
 

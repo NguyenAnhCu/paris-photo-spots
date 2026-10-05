@@ -24,10 +24,12 @@ export function unquote(value: string): string {
 export function parsePipeCsv(text: string): MuseofileRow[] {
   const [header = '', ...lines] = text.replace(/^\uFEFF/, '').split(/\r?\n/)
   const cols = header.split('|').map(unquote)
-  return lines.filter((l) => l.trim()).map((l) => {
-    const values = l.split('|')
-    return Object.fromEntries(cols.map((c, i) => [c, unquote(values[i] ?? '')]))
-  })
+  return lines
+    .filter((l) => l.trim())
+    .map((l) => {
+      const values = l.split('|')
+      return Object.fromEntries(cols.map((c, i) => [c, unquote(values[i] ?? '')]))
+    })
 }
 
 export function toWebsite(url: string): string | null {
@@ -41,7 +43,8 @@ type OsmMuseum = { id: string; name: string; at: LngLat }
 export function validateMuseofile(body: string) {
   const header = body.replace(/^\uFEFF/, '').split(/\r?\n/, 1)[0] ?? ''
   for (const col of ['Identifiant', 'Nom_officiel', 'Region', 'Coordonnees']) {
-    if (!header.includes(col)) throw new ImportAbortError(`museofile.csv: missing column ${col} — export format changed?`)
+    if (!header.includes(col))
+      throw new ImportAbortError(`museofile.csv: missing column ${col} — export format changed?`)
   }
 }
 

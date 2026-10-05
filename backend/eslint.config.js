@@ -13,7 +13,14 @@ export default tseslint.config(
       // Layering (routes → service → repository): routes never talk to the database directly.
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['**/db/pool.js', '**/*.repository.js'], message: 'Routes call services; only services use repositories.' }] },
+        {
+          patterns: [
+            {
+              group: ['**/db/pool.js', '**/*.repository.js'],
+              message: 'Routes call services; only services use repositories.',
+            },
+          ],
+        },
       ],
     },
   },

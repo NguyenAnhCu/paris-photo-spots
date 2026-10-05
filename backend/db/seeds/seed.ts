@@ -1,24 +1,80 @@
 // Small deterministic dataset for local dev, integration tests and E2E. Full imports (GTFS/OSM) live elsewhere.
 import pg from 'pg'
 
-type SeedStop = { gtfsId: string; name: string; modes: string[]; lines: string[]; zone: number; lng: number; lat: number }
+type SeedStop = {
+  gtfsId: string
+  name: string
+  modes: string[]
+  lines: string[]
+  zone: number
+  lng: number
+  lat: number
+}
 type SeedPoi = { name: string; category: string; zone: number; stop: string; walk: number; lng: number; lat: number }
 
 const STOPS: SeedStop[] = [
   { gtfsId: 'seed:bir-hakeim', name: 'Bir-Hakeim', modes: ['metro'], lines: ['6'], zone: 1, lng: 2.2894, lat: 48.8539 },
-  { gtfsId: 'seed:palais-royal', name: 'Palais Royal - Musée du Louvre', modes: ['metro'], lines: ['1', '7'], zone: 1, lng: 2.3364, lat: 48.8625 },
-  { gtfsId: 'seed:cite', name: 'Cité', modes: ['metro'], lines: ['4'], zone: 1, lng: 2.3470, lat: 48.8550 },
+  {
+    gtfsId: 'seed:palais-royal',
+    name: 'Palais Royal - Musée du Louvre',
+    modes: ['metro'],
+    lines: ['1', '7'],
+    zone: 1,
+    lng: 2.3364,
+    lat: 48.8625,
+  },
+  { gtfsId: 'seed:cite', name: 'Cité', modes: ['metro'], lines: ['4'], zone: 1, lng: 2.347, lat: 48.855 },
   { gtfsId: 'seed:abbesses', name: 'Abbesses', modes: ['metro'], lines: ['12'], zone: 1, lng: 2.3384, lat: 48.8845 },
-  { gtfsId: 'seed:versailles-rg', name: 'Versailles Château Rive Gauche', modes: ['rer'], lines: ['C'], zone: 4, lng: 2.1290, lat: 48.8003 },
+  {
+    gtfsId: 'seed:versailles-rg',
+    name: 'Versailles Château Rive Gauche',
+    modes: ['rer'],
+    lines: ['C'],
+    zone: 4,
+    lng: 2.129,
+    lat: 48.8003,
+  },
 ]
 
 const POIS: SeedPoi[] = [
   { name: 'Tour Eiffel', category: 'monument', zone: 1, stop: 'seed:bir-hakeim', walk: 10, lng: 2.2945, lat: 48.8584 },
-  { name: 'Musée du Louvre', category: 'museum', zone: 1, stop: 'seed:palais-royal', walk: 3, lng: 2.3376, lat: 48.8606 },
-  { name: 'Notre-Dame de Paris', category: 'church_religious', zone: 1, stop: 'seed:cite', walk: 4, lng: 2.3499, lat: 48.8530 },
-  { name: 'Jardin des Tuileries', category: 'park_garden', zone: 1, stop: 'seed:palais-royal', walk: 5, lng: 2.3275, lat: 48.8635 },
+  {
+    name: 'Musée du Louvre',
+    category: 'museum',
+    zone: 1,
+    stop: 'seed:palais-royal',
+    walk: 3,
+    lng: 2.3376,
+    lat: 48.8606,
+  },
+  {
+    name: 'Notre-Dame de Paris',
+    category: 'church_religious',
+    zone: 1,
+    stop: 'seed:cite',
+    walk: 4,
+    lng: 2.3499,
+    lat: 48.853,
+  },
+  {
+    name: 'Jardin des Tuileries',
+    category: 'park_garden',
+    zone: 1,
+    stop: 'seed:palais-royal',
+    walk: 5,
+    lng: 2.3275,
+    lat: 48.8635,
+  },
   { name: 'Sacré-Cœur', category: 'viewpoint', zone: 1, stop: 'seed:abbesses', walk: 8, lng: 2.3431, lat: 48.8867 },
-  { name: 'Château de Versailles', category: 'day_trip', zone: 4, stop: 'seed:versailles-rg', walk: 10, lng: 2.1204, lat: 48.8049 },
+  {
+    name: 'Château de Versailles',
+    category: 'day_trip',
+    zone: 4,
+    stop: 'seed:versailles-rg',
+    walk: 10,
+    lng: 2.1204,
+    lat: 48.8049,
+  },
 ]
 
 async function main() {

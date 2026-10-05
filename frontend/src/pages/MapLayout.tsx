@@ -24,10 +24,7 @@ export function MapLayout() {
   const { data: spots } = useSpots()
   const { category, query } = useSpotFilters()
   const visible = useFilteredSpots(spots, category, query)
-  const visibleCollection = useMemo(
-    () => (spots ? { ...spots, features: visible } : undefined),
-    [spots, visible],
-  )
+  const visibleCollection = useMemo(() => (spots ? { ...spots, features: visible } : undefined), [spots, visible])
 
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [focus, setFocus] = useState<MapFocus | null>(null)
@@ -41,7 +38,17 @@ export function MapLayout() {
   }, [])
 
   const ui: MapUi = useMemo(
-    () => ({ hoverId, setHoverId, focusSpot, placement, setPlacement, mobileTab, setMobileTab, pickingOnMap, setPickingOnMap }),
+    () => ({
+      hoverId,
+      setHoverId,
+      focusSpot,
+      placement,
+      setPlacement,
+      mobileTab,
+      setMobileTab,
+      pickingOnMap,
+      setPickingOnMap,
+    }),
     [hoverId, focusSpot, placement, mobileTab, pickingOnMap],
   )
 
@@ -61,7 +68,8 @@ export function MapLayout() {
   const activeIds = [isDesktop ? selectedId : mobileSelected, hoverId].filter((x): x is string => Boolean(x))
   const placing = placement !== null
   const mapVisible = isDesktop || pickingOnMap || (Boolean(listMatch) && mobileTab === 'map')
-  const miniSpot = !isDesktop && listMatch && mobileTab === 'map' ? visible.find((f) => f.properties.id === mobileSelected) : undefined
+  const miniSpot =
+    !isDesktop && listMatch && mobileTab === 'map' ? visible.find((f) => f.properties.id === mobileSelected) : undefined
 
   return (
     <MapUiContext.Provider value={ui}>
@@ -78,7 +86,11 @@ export function MapLayout() {
               draft={placement ?? undefined}
               onSelect={onSelect}
               onHover={isDesktop ? setHoverId : undefined}
-              onPlace={placing && (isDesktop || pickingOnMap) ? (p) => setPlacement((cur) => (cur ? { ...cur, position: p } : cur)) : undefined}
+              onPlace={
+                placing && (isDesktop || pickingOnMap)
+                  ? (p) => setPlacement((cur) => (cur ? { ...cur, position: p } : cur))
+                  : undefined
+              }
             />
           </div>
           {isDesktop && <TopBar />}
