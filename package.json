@@ -15,10 +15,13 @@
     "dev:frontend": "npm run dev -w frontend",
     "typecheck": "npm run typecheck --workspaces",
     "lint": "npm run lint --workspaces",
+    "test": "npm run test:unit -w backend && npm run test -w frontend",
+    "test:integration": "npm run test:integration -w backend",
     "format": "prettier --write backend frontend package.json README.md docker-compose.yml .prettierrc.json .github",
     "format:check": "prettier --check backend frontend package.json README.md docker-compose.yml .prettierrc.json .github"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "prettier": "^3.9.9"
   }
 }

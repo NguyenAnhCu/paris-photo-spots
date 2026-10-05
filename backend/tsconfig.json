@@ -13,5 +13,7 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  // Tests are type-checked by tsconfig.scripts.json but never compiled into dist/.
+  "exclude": ["**/*.test.ts"]
 }

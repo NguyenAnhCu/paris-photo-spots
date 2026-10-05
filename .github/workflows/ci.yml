@@ -36,3 +36,30 @@ jobs:
         run: npm run build -w backend
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
+
+  test-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (backend + frontend)
+        run: npm test
+
+  test-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Testcontainers starts postgis/postgis:17-3.4 on the runner's Docker and runs the migrations.
+      - name: Integration tests (PostGIS)
+        run: npm run test:integration
