@@ -4,6 +4,8 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react()],
+  // MapLibre's worker is an ES module (maplibre-gl-worker.mjs imports a shared chunk).
+  worker: { format: 'es' },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
   server: {
     port: 5173,

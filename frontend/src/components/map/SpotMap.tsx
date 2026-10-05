@@ -12,6 +12,7 @@ import {
   type MapRef,
 } from '@vis.gl/react-maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import './maplibreWorker'
 import type { ExpressionSpecification, GeoJSONSource } from 'maplibre-gl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { config } from '@/config'
