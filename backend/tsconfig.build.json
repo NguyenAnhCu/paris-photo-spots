@@ -1,0 +1,11 @@
+{
+  // Production build: compiles src/ to dist/ (run with `node dist/server.js`). Tests never reach dist/.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": false
+  },
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
+}
