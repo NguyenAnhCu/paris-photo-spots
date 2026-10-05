@@ -206,3 +206,16 @@ a.photo-credit:hover {
 .detail-page .detail__stats {
   gap: 8px;
 }
+
+/* Touch: a 14px-high text line is hard to hit; grow the hit area without moving the layout. */
+@media (pointer: coarse) {
+  .photo-credit {
+    padding-block: 15px;
+    margin-block: -15px;
+  }
+}
+@media (pointer: coarse) {
+  .detail-page__top .pill {
+    min-height: var(--tap-min);
+  }
+}

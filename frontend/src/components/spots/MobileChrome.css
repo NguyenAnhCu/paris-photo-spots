@@ -36,9 +36,17 @@
   padding: 0 18px 0 12px;
 }
 @media (max-width: 420px) {
-  /* Narrow phones: keep the language switch to its icon + short select */
-  .m-header .lang-switch {
-    padding: 0 8px;
+  /* Narrow phones: tighter language pill (the select still covers all of it) */
+  .m-header .lang-switch svg {
+    left: 9px;
+  }
+  .m-header .lang-switch select {
+    padding: 0 10px 0 29px;
+  }
+}
+@media (pointer: coarse) {
+  .m-header__add {
+    min-height: var(--tap-min);
   }
 }
 
@@ -168,4 +176,10 @@
 }
 .placing-bar .pill {
   min-height: var(--tap-min);
+}
+
+@media (pointer: coarse) {
+  .m-header__brand {
+    min-height: var(--tap-min);
+  }
 }

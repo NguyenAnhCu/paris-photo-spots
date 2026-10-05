@@ -45,8 +45,8 @@ export function BottomSegmented() {
     { id: 'map' as const, label: t('nav.map'), icon: MapIcon },
   ]
   return (
-    <div className="segmented-wrap">
-      <div className="segmented" role="tablist" aria-label={t('nav.views')}>
+    <nav className="segmented-wrap" aria-label={t('nav.views')}>
+      <div className="segmented" role="tablist">
         {tabs.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -61,7 +61,7 @@ export function BottomSegmented() {
           </button>
         ))}
       </div>
-    </div>
+    </nav>
   )
 }
 

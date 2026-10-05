@@ -76,6 +76,14 @@ export function MapLayout() {
       <div className={`layout layout--${bp}`}>
         {!isDesktop && !pickingOnMap && <MobileHeader />}
         <div className="layout__stage">
+          {isDesktop && <TopBar />}
+          {/* Unstyled landmark: panels/columns stay positioned against .layout__stage. */}
+          <main>
+            <Outlet />
+            {miniSpot && <MiniSpotCard spot={miniSpot.properties} onOpen={() => nav.toSpot(miniSpot.properties.id)} />}
+            {pickingOnMap && <PlacingBar />}
+          </main>
+          {/* After the content in DOM order so Tab reaches the top bar and the list first (z-index keeps it underneath). */}
           <div className="layout__map" data-visible={mapVisible}>
             <SpotMap
               spots={visibleCollection}
@@ -93,11 +101,7 @@ export function MapLayout() {
               }
             />
           </div>
-          {isDesktop && <TopBar />}
-          <Outlet />
           {!isDesktop && listMatch && !pickingOnMap && <BottomSegmented />}
-          {miniSpot && <MiniSpotCard spot={miniSpot.properties} onOpen={() => nav.toSpot(miniSpot.properties.id)} />}
-          {pickingOnMap && <PlacingBar />}
         </div>
       </div>
     </MapUiContext.Provider>
