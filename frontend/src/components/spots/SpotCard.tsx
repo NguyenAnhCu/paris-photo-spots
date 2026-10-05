@@ -1,8 +1,8 @@
-import { useI18n } from '../../i18n/I18nContext'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '../../i18n/keys'
-import { CROWD_LEVEL_LABEL } from '../../lib/crowd'
-import type { SpotSummary } from '../../types/spot'
-import { Photo, Tag } from '../ui'
+import { useI18n } from '@/i18n/useI18n'
+import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '@/i18n/keys'
+import { CROWD_LEVEL_LABEL } from '@/lib/crowd'
+import type { SpotSummary } from '@/types/spot'
+import { Photo, Tag } from '@/components/ui'
 import './SpotCard.css'
 
 type SpotCardProps = {

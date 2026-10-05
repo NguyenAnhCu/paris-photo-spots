@@ -2,7 +2,7 @@
 // hovered/selected pins turn clay and grow 32 → 40px. Drawn as SVG images for a MapLibre symbol layer (hundreds of
 // DOM markers re-created on every state change is too slow).
 // Raw colours: MapLibre images cannot read CSS variables — keep in sync with tokens.css (--accent, --clay).
-import type { SpotCategory } from '../../types/spot'
+import type { SpotCategory } from '@/types/spot'
 
 export const PIN_COLOR = { normal: '#5980a6', active: '#c4825a', draft: '#c4825a', empty: '#98989b' } as const
 export const PIN_SIZE = { normal: 32, active: 40 } as const

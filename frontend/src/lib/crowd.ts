@@ -1,7 +1,7 @@
 // Simulated hourly crowd profile (no real data source yet — the UI must label it "ước tính" / estimate).
 // Formula from the design prototype: Gaussian around 14h (σ 4.2),
 // scaled by crowdLevel/3, extra peak at 19h for sunset spots, small deterministic per-spot jitter.
-import type { CrowdLevel } from '../types/spot'
+import type { CrowdLevel } from '@/types/spot'
 
 export const FIRST_HOUR = 6
 export const LAST_HOUR = 22

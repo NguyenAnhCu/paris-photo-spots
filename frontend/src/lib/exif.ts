@@ -1,7 +1,7 @@
 // Reads a small EXIF summary from a JPEG ArrayBuffer, in the browser, before upload (the server strips all
 // metadata). Typed (no `any`), and parse failures are reported to the
 // caller instead of being swallowed. JPEG only — HEIC/PNG return { kind: 'missing' }.
-import type { ExifSummary } from '../types/spot'
+import type { ExifSummary } from '@/types/spot'
 
 export type ExifResult = { kind: 'ok'; exif: ExifSummary } | { kind: 'missing' } | { kind: 'error'; error: Error }
 

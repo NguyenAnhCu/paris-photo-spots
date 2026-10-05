@@ -2,12 +2,12 @@
 // floating top bar + left panel. Tablet/mobile: header + content column, "Danh sách | Bản đồ" switch (F4).
 import { useCallback, useMemo, useState } from 'react'
 import { Outlet, useMatch } from 'react-router-dom'
-import { SpotMap, type MapFocus } from '../components/map/SpotMap'
-import { MobileHeader, BottomSegmented, MiniSpotCard, PlacingBar } from '../components/spots/MobileChrome'
-import { TopBar } from '../components/spots/TopBar'
-import { useBreakpoint } from '../hooks/useBreakpoint'
-import { useFilteredSpots, useSpotFilters } from '../hooks/useSpotFilters'
-import { useSpots } from '../hooks/useSpots'
+import { SpotMap, type MapFocus } from '@/components/map/SpotMap'
+import { MobileHeader, BottomSegmented, MiniSpotCard, PlacingBar } from '@/components/spots/MobileChrome'
+import { TopBar } from '@/components/spots/TopBar'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useFilteredSpots, useSpotFilters } from '@/hooks/useSpotFilters'
+import { useSpots } from '@/hooks/useSpots'
 import { MapUiContext, useSpotNav, type MapUi, type Placement } from './mapUi'
 import './MapLayout.css'
 

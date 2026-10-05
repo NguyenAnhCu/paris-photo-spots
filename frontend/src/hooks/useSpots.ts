@@ -1,11 +1,11 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { photosApi, type PhotoUpload } from '../api/photos'
-import { spotsApi, type NewSpot } from '../api/spots'
-import { config } from '../config'
-import { useI18n } from '../i18n/I18nContext'
-import { fetchWeather } from '../lib/weather'
-import type { SpotCollection } from '../types/spot'
+import { photosApi, type PhotoUpload } from '@/api/photos'
+import { spotsApi, type NewSpot } from '@/api/spots'
+import { config } from '@/config'
+import { useI18n } from '@/i18n/useI18n'
+import { fetchWeather } from '@/lib/weather'
+import type { SpotCollection } from '@/types/spot'
 
 export const spotKeys = {
   all: (lang: string) => ['spots', lang] as const,

@@ -1,30 +1,15 @@
 import { CirclePlus, MapPin, Search, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useMatch } from 'react-router-dom'
-import { useSpotFilters } from '../../hooks/useSpotFilters'
-import { useI18n } from '../../i18n/I18nContext'
-import { categoryLabelKey } from '../../i18n/keys'
-import { useSpotNav } from '../../pages/mapUi'
-import { SPOT_CATEGORIES } from '../../types/spot'
-import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
-import { CategoryChip, PillButton } from '../ui'
+import { useSlashToSearch } from '@/hooks/useSlashToSearch'
+import { useSpotFilters } from '@/hooks/useSpotFilters'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import { useSpotNav } from '@/pages/mapUi'
+import { SPOT_CATEGORIES } from '@/types/spot'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
+import { CategoryChip, PillButton } from '@/components/ui'
 import './TopBar.css'
-
-// "/" focuses search from anywhere, unless the user is already typing in a field.
-export function useSlashToSearch(input: React.RefObject<HTMLInputElement | null>) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null
-      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
-      if (e.key === '/' && !typing) {
-        e.preventDefault()
-        input.current?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [input])
-}
 
 export function SearchField({ variant }: { variant: 'bar' | 'column' }) {
   const { t } = useI18n()

@@ -1,5 +1,5 @@
-import type { CommunityPhoto } from '../../types/spot'
-import { Tag } from '../ui'
+import type { CommunityPhoto } from '@/types/spot'
+import { Tag } from '@/components/ui'
 
 type ExifSource = Pick<CommunityPhoto, 'focal' | 'aperture' | 'shutter' | 'iso' | 'camera'>
 

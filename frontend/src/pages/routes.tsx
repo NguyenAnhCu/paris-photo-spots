@@ -1,9 +1,9 @@
 // Route pages: pick the desktop panel or the tablet/mobile page variant of each view.
 import { useParams } from 'react-router-dom'
-import { AddPhotoForm, AddSpotForm } from '../components/spots/AddForms'
-import { SpotPanel } from '../components/spots/SpotDetail'
-import { SpotList } from '../components/spots/SpotList'
-import { useBreakpoint } from '../hooks/useBreakpoint'
+import { AddPhotoForm, AddSpotForm } from '@/components/spots/AddForms'
+import { SpotPanel } from '@/components/spots/SpotDetail'
+import { SpotList } from '@/components/spots/SpotList'
+import { useBreakpoint } from '@/hooks/useBreakpoint'
 import { useMapUi } from './mapUi'
 
 function useLayout(): 'panel' | 'page' {

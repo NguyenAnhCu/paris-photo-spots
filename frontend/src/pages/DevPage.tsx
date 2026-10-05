@@ -2,10 +2,10 @@
 // Developer-only page: its fixed sample values are data, not UI copy.
 import { Camera, Clock, Cloud, Images, Plus, SlidersHorizontal, Users, X } from 'lucide-react'
 import { useState } from 'react'
-import { CategoryChip, IconButton, PillButton, StatTile, Tag } from '../components/ui'
-import { LanguageSwitcher } from '../components/LanguageSwitcher/LanguageSwitcher'
-import { useI18n } from '../i18n/I18nContext'
-import { SPOT_CATEGORIES, type SpotCategory } from '../types/spot'
+import { CategoryChip, IconButton, PillButton, StatTile, Tag } from '@/components/ui'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
+import { useI18n } from '@/i18n/useI18n'
+import { SPOT_CATEGORIES, type SpotCategory } from '@/types/spot'
 import './DevPage.css'
 
 export function DevPage() {

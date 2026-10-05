@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { useI18n } from '../../i18n/I18nContext'
-import { categoryLabelKey } from '../../i18n/keys'
-import type { SpotCategory } from '../../types/spot'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import type { SpotCategory } from '@/types/spot'
 import { ALL_CATEGORIES_ICON, CATEGORY_ICON } from './categoryIcons'
 import './ui.css'
 

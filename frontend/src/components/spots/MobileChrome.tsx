@@ -1,13 +1,13 @@
 // Tablet/mobile chrome (< 1000px): header, floating "Danh sách | Bản đồ" switch, mini card, placement bar.
 import { ArrowRight, CirclePlus, List, Map as MapIcon } from 'lucide-react'
-import { useI18n } from '../../i18n/I18nContext'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '../../i18n/keys'
-import { CROWD_LEVEL_LABEL } from '../../lib/crowd'
-import { formatCoords } from '../../lib/geo'
-import { useMapUi, useSpotNav } from '../../pages/mapUi'
-import type { SpotSummary } from '../../types/spot'
-import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
-import { Photo, PillButton } from '../ui'
+import { useI18n } from '@/i18n/useI18n'
+import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '@/i18n/keys'
+import { CROWD_LEVEL_LABEL } from '@/lib/crowd'
+import { formatCoords } from '@/lib/geo'
+import { useMapUi, useSpotNav } from '@/pages/mapUi'
+import type { SpotSummary } from '@/types/spot'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
+import { Photo, PillButton } from '@/components/ui'
 import './MobileChrome.css'
 
 export function MobileHeader() {

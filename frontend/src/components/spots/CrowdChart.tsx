@@ -1,28 +1,12 @@
-import { useMemo } from 'react'
-import { useI18n } from '../../i18n/I18nContext'
-import { crowdLabelKey } from '../../i18n/keys'
-import { busiestHour, clampToProfileHour, crowdLabelAt, crowdProfile, seedFromId, type CrowdLabel } from '../../lib/crowd'
-import type { CrowdLevel } from '../../types/spot'
+import { useI18n } from '@/i18n/useI18n'
+import { crowdLabelKey } from '@/i18n/keys'
+import type { CrowdLabel, HourlyCrowd } from '@/lib/crowd'
 
 const AXIS_HOURS = [6, 9, 12, 15, 18, 21]
 const MIN_BAR_PX = 8
 const MAX_BAR_EXTRA_PX = 48
-const PARIS_TZ = 'Europe/Paris'
 
-// The spots are in Paris: "now" is Paris time even when planning from abroad.
-export function parisHour(date = new Date()): number {
-  return Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: PARIS_TZ }).format(date))
-}
-
-export function useCrowdNow(spotId: string, crowdLevel: CrowdLevel, sunsetPeak: boolean) {
-  return useMemo(() => {
-    const profile = crowdProfile(crowdLevel, sunsetPeak, seedFromId(spotId))
-    const hour = clampToProfileHour(parisHour())
-    return { profile, hour, label: crowdLabelAt(profile, hour) as CrowdLabel, peak: busiestHour(profile) }
-  }, [spotId, crowdLevel, sunsetPeak])
-}
-
-type CrowdChartProps = { profile: ReturnType<typeof crowdProfile>; hour: number; label: CrowdLabel; peak: number }
+type CrowdChartProps = { profile: HourlyCrowd[]; hour: number; label: CrowdLabel; peak: number }
 
 export function CrowdChart({ profile, hour, label, peak }: CrowdChartProps) {
   const { t } = useI18n()

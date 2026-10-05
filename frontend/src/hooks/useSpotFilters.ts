@@ -1,9 +1,9 @@
 import { useCallback, useDeferredValue, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useI18n } from '../i18n/I18nContext'
-import { categoryLabelKey } from '../i18n/keys'
-import { matchesQuery } from '../lib/search'
-import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '../types/spot'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import { matchesQuery } from '@/lib/search'
+import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '@/types/spot'
 
 const isCategory = (v: string | null): v is SpotCategory => SPOT_CATEGORIES.includes(v as SpotCategory)
 

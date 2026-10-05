@@ -11,7 +11,7 @@ import {
   Waves,
   type LucideIcon,
 } from 'lucide-react'
-import type { SpotCategory } from '../../types/spot'
+import type { SpotCategory } from '@/types/spot'
 
 export const CATEGORY_ICON: Record<SpotCategory, LucideIcon> = {
   landmark: Landmark,

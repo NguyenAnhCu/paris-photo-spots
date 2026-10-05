@@ -1,4 +1,4 @@
-import type { CommunityPhoto, ExifSummary, Page } from '../types/spot'
+import type { CommunityPhoto, ExifSummary, Page } from '@/types/spot'
 import { api } from './client'
 
 export type PhotoUpload = { spotId: string; file: File; authorName?: string; exif?: ExifSummary }
