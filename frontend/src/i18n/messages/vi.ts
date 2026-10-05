@@ -103,6 +103,7 @@ export const vi = {
   'add.locationDesktopHint': 'Chạm vào bản đồ để đặt vị trí',
   'add.locationChangeHint': 'chạm bản đồ để đổi',
   'add.locationNone': 'Chưa chọn vị trí',
+  'add.locationTapHint': 'Chạm vào bản đồ để đặt ghim',
   'add.locationPick': 'Chọn trên bản đồ',
   'add.locationDone': 'Xong',
   'add.photoStep': '2. Chọn ảnh',
