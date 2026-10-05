@@ -1,9 +1,10 @@
 {
-  // Type-checks the tsx-run scripts in db/ (seeds, imports), which the build config (rootDir: src) excludes.
+  // Type-checks what the build config (rootDir: src, no tests) leaves out: db/ scripts, tests and test helpers.
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true
   },
-  "include": ["src", "db"]
+  "include": ["src", "db", "test", "vitest.config.ts"],
+  "exclude": []
 }

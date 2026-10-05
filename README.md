@@ -25,7 +25,7 @@ npm run dev:backend                    # http://localhost:3000
 npm run dev:frontend                   # http://localhost:5173
 ```
 
-Kiểm tra: `npm run typecheck`, `npm run build -w frontend`.
+Kiểm tra: `npm run lint`, `npm run typecheck`, `npm test` (unit), `npm run test:integration` (cần Docker), `npm run build -w frontend`.
 
 ## Lưu ý
 
