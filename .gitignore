@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+*.log
+*.tsbuildinfo
+# Raw open-data downloads (re-fetch with: npm run import -w backend -- --refresh)
+backend/db/import/.cache/
+# Uploaded community photos (simplest storage, see backend/src/storage/photoStorage.ts)
+backend/storage/

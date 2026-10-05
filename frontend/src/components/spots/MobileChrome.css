@@ -1,0 +1,157 @@
+.m-header {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  height: calc(var(--header-h) + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) max(28px, env(safe-area-inset-right)) 0 max(28px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg);
+}
+.layout--mobile .m-header {
+  padding-left: max(var(--edge), env(safe-area-inset-left));
+  padding-right: max(var(--edge), env(safe-area-inset-right));
+}
+.m-header__brand {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.m-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.m-header__add {
+  min-height: 40px;
+  padding: 0 18px 0 12px;
+}
+@media (max-width: 420px) {
+  /* Narrow phones: keep the language switch to its icon + short select */
+  .m-header .lang-switch {
+    padding: 0 8px;
+  }
+}
+
+/* Floating "Danh sách | Bản đồ" (design: ink pill, bottom 20, centred) */
+.segmented-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.segmented {
+  pointer-events: auto;
+  display: flex;
+  padding: 4px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  box-shadow: var(--shadow-dark);
+}
+.segmented__tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap-min);
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.segmented__tab[aria-selected='true'] {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Mini card when a pin is tapped (bottom 84) */
+.mini-card {
+  position: absolute;
+  left: var(--edge);
+  right: var(--edge);
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 40;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 0;
+  border-radius: var(--r-tile);
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+.mini-card__photo {
+  width: 68px;
+  height: 68px;
+  flex: none;
+  border-radius: var(--r-input);
+}
+.mini-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.mini-card__category {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-700);
+}
+.mini-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mini-card__meta {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.mini-card__arrow {
+  flex: none;
+  color: var(--accent-700);
+  margin: 0 6px;
+}
+
+/* Full-screen placement bar (ink pill at top) */
+.placing-bar {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 12px;
+  right: 12px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 18px;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+  color: var(--bg);
+  box-shadow: var(--shadow-dark);
+  font-size: 14px;
+}

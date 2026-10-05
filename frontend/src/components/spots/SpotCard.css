@@ -1,0 +1,123 @@
+.spot-card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--divider-soft);
+  background: var(--bg);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+/* ── Desktop overlay card: 156px, photo fills, gradient + white text ── */
+.spot-card--overlay {
+  position: relative;
+  height: 156px;
+  flex: none;
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.spot-card--overlay .spot-card__photo {
+  position: absolute;
+  inset: 0;
+}
+.spot-card--overlay:hover,
+.spot-card--overlay:focus-visible,
+.spot-card--overlay[data-active='true'] {
+  border-color: var(--accent);
+}
+.spot-card--overlay:hover,
+.spot-card--overlay:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
+}
+.spot-card__crowd {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 3px 11px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--panel-bg);
+  color: var(--tonal-fg);
+  box-shadow: var(--shadow-chip);
+}
+.spot-card__crowd--3 {
+  background: var(--clay-chip);
+  color: var(--clay-ink);
+}
+.spot-card__caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 48px 18px 14px;
+  background: var(--overlay-gradient);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.spot-card--overlay .spot-card__name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.05;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.spot-card__meta {
+  font-size: 12px;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Tablet/mobile stacked card: 4/3 photo then text ── */
+.spot-card--stacked {
+  border-color: var(--divider);
+  border-radius: var(--r-card);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.spot-card--stacked:hover,
+.spot-card--stacked[data-active='true'] {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-card-soft);
+}
+.spot-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+}
+.spot-card--stacked .spot-card__photo {
+  position: absolute;
+  inset: 0;
+}
+.spot-card__category {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  color: var(--accent-800);
+}
+.spot-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 14px;
+}
+.spot-card--stacked .spot-card__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 26px;
+  line-height: 1.05;
+}
+.spot-card__tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}

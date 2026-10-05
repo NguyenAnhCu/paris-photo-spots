@@ -1,0 +1,242 @@
+/* Shared building blocks. Sizes follow the design spec; colours/radii only via tokens. */
+
+/* ── Pill buttons (height 42, radius pill) ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: var(--r-pill);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+}
+.pill:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pill--primary {
+  background: var(--btn-primary-bg);
+  color: var(--white);
+  box-shadow: var(--shadow-primary);
+}
+.pill--tonal {
+  background: var(--tonal-bg);
+  color: var(--tonal-fg);
+}
+.pill--clay {
+  background: var(--clay-dark);
+  color: var(--white);
+  box-shadow: var(--shadow-clay);
+}
+.pill--dark {
+  background: var(--ink);
+  color: var(--bg);
+}
+.pill--white {
+  background: var(--white);
+  color: var(--tonal-fg);
+  box-shadow: var(--shadow-button);
+}
+.pill--lg {
+  min-height: 46px;
+  font-size: 15px;
+  padding: 0 22px 0 16px;
+}
+.pill--block {
+  width: 100%;
+}
+.pill--active {
+  background: var(--btn-primary-bg);
+  color: var(--white);
+}
+
+/* ── Round icon button (40 desktop, 44 touch) ── */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--divider);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+  flex: none;
+}
+@media (pointer: coarse) {
+  .icon-btn {
+    width: var(--tap-min);
+    height: var(--tap-min);
+  }
+}
+
+/* ── Category chip ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 14px 7px 11px;
+  border: 1px solid var(--divider);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.chip svg {
+  color: var(--accent-700);
+}
+.chip[aria-pressed='true'] {
+  border-color: var(--btn-primary-bg);
+  background: var(--btn-primary-bg);
+  color: var(--white);
+}
+.chip[aria-pressed='true'] svg {
+  color: var(--bg);
+}
+@media (pointer: coarse) {
+  .chip {
+    min-height: var(--tap-min);
+  }
+}
+
+/* ── Tags (small pills) ── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: var(--tonal-bg);
+  color: var(--tonal-fg);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.tag--crowd-1 {
+  background: var(--crowd-1);
+}
+.tag--crowd-2 {
+  background: var(--crowd-2);
+}
+.tag--crowd-3 {
+  background: var(--crowd-3);
+  color: var(--clay-ink);
+}
+.tag--neutral {
+  background: var(--ink-soft);
+  color: var(--tonal-fg);
+}
+.tag--paper {
+  background: var(--panel-bg);
+  color: var(--tonal-fg);
+}
+.tag--mono {
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 6px 14px;
+}
+
+/* ── Stat tile ── */
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: var(--r-tile);
+  background: var(--tile-bg);
+  color: var(--tonal-fg);
+}
+.stat--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.stat svg {
+  flex: none;
+  color: var(--accent-700);
+}
+.stat__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+}
+.stat__label {
+  font-size: 12px;
+  opacity: 0.75;
+}
+/* Three tiles share 440px: values wrap to two lines instead of being cut ("Bình mi…"). */
+.stat__value {
+  font-size: 15px;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Glass surface (floating bars & popovers) ── */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float);
+}
+
+/* ── Photo surfaces ── */
+.photo-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--stripe);
+}
+.photo-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* original colours: no duotone (user decision 2026-10-05) */
+}
+
+/* ── Form fields ── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field__label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.input {
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 10px 14px;
+  border: 1px solid var(--divider);
+  border-radius: var(--r-input);
+  background: var(--white);
+  color: var(--ink);
+  font-size: 15px;
+}
+.input:focus-visible {
+  border-color: var(--accent-700);
+}
+textarea.input {
+  min-height: 90px;
+  resize: vertical;
+}

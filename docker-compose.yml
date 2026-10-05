@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgis/postgis:17-3.4
+    # Reuses the 17-3.4 image already on this machine. postgis/postgis has no arm64 build (runs emulated on Apple Silicon).
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: pmv
+      POSTGRES_PASSWORD: pmv
+      POSTGRES_DB: pmv
+      TZ: UTC
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pmv -d pmv"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

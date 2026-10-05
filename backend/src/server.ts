@@ -1,0 +1,21 @@
+import { createApp } from './app.js'
+import { env } from './config/env.js'
+import { pool } from './db/pool.js'
+import { logger } from './lib/logger.js'
+
+// Express 5 passes listen errors (e.g. EADDRINUSE) to this callback instead of throwing.
+const server = createApp().listen(env.PORT, (err?: Error) => {
+  if (err) {
+    logger.fatal({ err }, `Cannot listen on port ${env.PORT}`)
+    process.exit(1)
+  }
+  logger.info(`API listening on http://localhost:${env.PORT}`)
+})
+
+const shutdown = () => {
+  server.close(() => {
+    void pool.end().then(() => process.exit(0))
+  })
+}
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)

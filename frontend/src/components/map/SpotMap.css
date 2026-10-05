@@ -1,0 +1,30 @@
+.spot-map {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+}
+.spot-map .maplibregl-map {
+  font-family: var(--font-body);
+}
+/* Zoom control: design places it bottom-right with a 20px margin, round and soft. */
+.spot-map .maplibregl-ctrl-bottom-right {
+  margin: 0 12px 12px 0;
+}
+.spot-map .maplibregl-ctrl-group {
+  border-radius: var(--r-tile);
+  overflow: hidden;
+  box-shadow: var(--shadow-float);
+  background: var(--panel-bg);
+}
+.spot-map .maplibregl-ctrl-group button {
+  width: var(--tap-min);
+  height: var(--tap-min);
+}
+.spot-map .maplibregl-ctrl-attrib {
+  font-size: 12px;
+  background: var(--glass);
+}
+.spot-map .maplibregl-canvas:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
+}
