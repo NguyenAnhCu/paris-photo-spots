@@ -16,6 +16,8 @@ export default defineConfig({
   maxFailures: CI ? 10 : 0,
   timeout: 30_000,
   expect: { timeout: 10_000 },
+  // A missing baseline is written and the test fails: CI uploads it with the report (see visual.spec.ts).
+  updateSnapshots: 'missing',
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: WEB_URL,
@@ -36,7 +38,7 @@ export default defineConfig({
     },
     {
       name: 'mobile',
-      testMatch: /(mobile|a11y)\.spec\.ts/,
+      testMatch: /(mobile|a11y|visual)\.spec\.ts/,
       use: {
         ...devices['Pixel 7'],
         viewport: { width: 390, height: 844 },
