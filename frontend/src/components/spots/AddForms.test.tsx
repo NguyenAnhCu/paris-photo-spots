@@ -5,7 +5,7 @@ import { createTranslator } from '@/i18n/translate'
 import { useMapUi } from '@/pages/mapUi'
 import { jpegWithExif, SONY_EXIF } from '@/test/jpegExif'
 import { currentLocation, fakeFetch, json, renderWithApp } from '@/test/render'
-import { AddSpotForm } from './AddForms'
+import { AddPhotoForm, AddSpotForm } from './AddForms'
 
 const t = createTranslator('vi')
 const location = () => currentLocation(screen.getByTestId('location'))
@@ -145,5 +145,72 @@ describe('AddSpotForm', () => {
     await user.upload(screen.getByLabelText(t('add.photoStep')), png)
     expect(await screen.findByText(t('add.exifMissing'))).toBeInTheDocument()
     expect(screen.getByLabelText(t('exif.focal'))).toHaveValue('')
+  })
+})
+
+describe('AddPhotoForm (photo for an existing spot)', () => {
+  const SPOT = 'existing-1'
+  const photoSubmit = () => screen.getByRole('button', { name: t('add.submitPhoto') })
+
+  function renderPhotoForm(upload: (init: RequestInit | undefined) => Response) {
+    vi.stubGlobal(
+      'fetch',
+      fakeFetch({
+        'GET /api/v1/spots/item': () => json(200, { ...createdSpot(SPOT), name: 'Pont Neuf', user_created: false }),
+        'POST /api/v1/photos': (_url, init) => upload(init),
+      }),
+    )
+    const user = userEvent.setup()
+    renderWithApp(<AddPhotoForm spotId={SPOT} layout="panel" />, { route: `/spots/${SPOT}/add-photo` })
+    return user
+  }
+
+  it('needs a photo; uploads it with EXIF and author for this spot, then shows the spot photos', async () => {
+    const uploads: FormData[] = []
+    const user = renderPhotoForm((init) => {
+      uploads.push(init?.body as FormData)
+      return json(201, { id: 'p9', spot_id: SPOT })
+    })
+    expect(await screen.findByRole('button', { name: 'Pont Neuf' })).toBeInTheDocument()
+    expect(photoSubmit()).toBeDisabled()
+
+    await user.upload(
+      screen.getByLabelText(t('add.photoStep')),
+      new File([jpegWithExif(SONY_EXIF)], 'IMG_0002.jpg', { type: 'image/jpeg' }),
+    )
+    expect(await screen.findByText(t('add.exifOk'))).toBeInTheDocument()
+    await user.type(screen.getByLabelText(t('add.author')), '  Linh  ')
+    await user.click(photoSubmit())
+
+    await waitFor(() => expect(location().path).toBe(`/spots/${SPOT}/photos`))
+    const form = uploads[0]
+    expect(form?.get('spot_id')).toBe(SPOT)
+    expect(form?.get('author_name')).toBe('Linh')
+    expect(form?.get('focal')).toBe('35mm')
+    expect(form?.get('file')).toBeInstanceOf(File)
+  })
+
+  it('a refused upload shows the reason and stays on the form', async () => {
+    const user = renderPhotoForm(() =>
+      json(400, { error: { code: 'IMAGE_TOO_LARGE', message: 'Image dimensions are too large', status: 400 } }),
+    )
+    await user.upload(
+      screen.getByLabelText(t('add.photoStep')),
+      new File([jpegWithExif(SONY_EXIF)], 'huge.jpg', { type: 'image/jpeg' }),
+    )
+    await user.click(photoSubmit())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(t('errors.IMAGE_TOO_LARGE'))
+    expect(location().path).toBe(`/spots/${SPOT}/add-photo`)
+    expect(photoSubmit()).toBeEnabled()
+  })
+
+  it.each([['Pont Neuf'], [t('common.cancel')]])('"%s" goes back to the spot without uploading', async (button) => {
+    const upload = vi.fn(() => json(201, {}))
+    const user = renderPhotoForm(upload)
+    await screen.findByRole('button', { name: 'Pont Neuf' })
+    await user.click(screen.getByRole('button', { name: button }))
+    expect(location().path).toBe(`/spots/${SPOT}`)
+    expect(upload).not.toHaveBeenCalled()
   })
 })

@@ -27,6 +27,10 @@ npm run dev:frontend                   # http://localhost:5173
 
 Kiểm tra: `npm run lint`, `npm run typecheck`, `npm test` (unit), `npm run test:integration` (cần Docker), `npm run build -w frontend`.
 
+**Trước mỗi lần push:** hook `.githooks/pre-push` (tự bật khi `npm install`) chạy `npm run verify` — format, lint, typecheck, build,
+unit, integration và E2E — và chặn push nếu có bước đỏ hoặc còn thay đổi chưa commit. Cần Docker đang chạy (`npm run db:up`).
+CI chạy lại cùng các bước trên mọi pull request.
+
 E2E (Playwright, bản build production, DB riêng `pmv_e2e` trên PostGIS của `npm run db:up`, không gọi mạng ngoài):
 
 ```bash

@@ -10,6 +10,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "prepare": "git rev-parse --git-dir >/dev/null 2>&1 && git config core.hooksPath .githooks || true",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "dev:backend": "npm run dev -w backend",
@@ -18,9 +19,10 @@
     "lint": "npm run lint --workspaces",
     "test": "npm run test:unit -w backend && npm run test -w frontend",
     "test:integration": "npm run test:integration -w backend",
+    "test:e2e": "npm test -w e2e",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run build -w frontend && npm run build -w backend && npm test && npm run test:integration && npm run test:e2e",
     "format": "prettier --write backend frontend e2e package.json README.md docker-compose.yml .prettierrc.json .github",
-    "format:check": "prettier --check backend frontend e2e package.json README.md docker-compose.yml .prettierrc.json .github",
-    "test:e2e": "npm test -w e2e"
+    "format:check": "prettier --check backend frontend e2e package.json README.md docker-compose.yml .prettierrc.json .github"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^5.0.3",
