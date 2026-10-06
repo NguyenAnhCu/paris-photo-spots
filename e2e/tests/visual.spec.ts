@@ -35,8 +35,9 @@ async function settled(page: Page) {
 async function shoot(page: Page, name: string, map = true) {
   if (map) await waitForIdle(page)
   await settled(page)
-  // WebGL on SwiftShader can differ by a few anti-aliased pixels between runs.
-  await expect(page).toHaveScreenshot(`${name}.png`, { maxDiffPixelRatio: 0.01 })
+  // threshold: per-pixel colour tolerance. Playwright's default (0.2) let a changed button colour (#416180 → #4a6a80)
+  // pass; 0.05 catches it. maxDiffPixelRatio absorbs the few anti-aliased pixels WebGL may vary between runs.
+  await expect(page).toHaveScreenshot(`${name}.png`, { threshold: 0.05, maxDiffPixelRatio: 0.01 })
 }
 
 // Desktop shows the map next to the panels; on the phone the list/detail pages come without it.
