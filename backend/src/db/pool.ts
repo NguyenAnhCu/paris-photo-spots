@@ -19,15 +19,21 @@ pool.on('error', (err) => {
 
 export async function withTransaction<T>(fn: (client: pg.PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect()
+  // Set when the connection is unusable: release(err) destroys it instead of handing it to the next request.
+  let broken: Error | undefined
   try {
     await client.query('BEGIN')
     const result = await fn(client)
     await client.query('COMMIT')
     return result
   } catch (err) {
-    await client.query('ROLLBACK')
+    // A failed ROLLBACK (connection dropped mid-transaction) must not hide the error that caused it.
+    await client.query('ROLLBACK').catch((rollbackErr: unknown) => {
+      logger.error({ err: rollbackErr }, 'ROLLBACK failed, discarding the connection')
+      broken = rollbackErr instanceof Error ? rollbackErr : new Error(String(rollbackErr))
+    })
     throw err
   } finally {
-    client.release()
+    client.release(broken)
   }
 }

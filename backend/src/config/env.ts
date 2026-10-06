@@ -35,7 +35,11 @@ const EnvSchema = z.object({
   MAX_UPLOAD_MB: z.coerce.number().positive().default(10),
   IMAGE_MAX_EDGE: z.coerce.number().int().positive().default(2048),
   THUMB_EDGE: z.coerce.number().int().positive().default(400),
+  // Width × height read from the header before decoding. A JPEG above ~100 MP is already over MAX_UPLOAD_MB.
+  IMAGE_MAX_INPUT_PIXELS: z.coerce.number().int().positive().default(100_000_000),
   IMAGE_JPEG_QUALITY: z.coerce.number().int().min(1).max(100).default(82),
+  // Graceful stop (SIGTERM on deploy): requests still running after this are cut off.
+  SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   WRITE_RATE_LIMIT: z.coerce.number().int().positive().default(20),
   WRITE_RATE_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
 })

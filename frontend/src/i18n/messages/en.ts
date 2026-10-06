@@ -138,6 +138,7 @@ export const en: Messages = {
   'errors.UNSUPPORTED_IMAGE': 'Only JPEG, PNG or WebP photos are supported.',
   'errors.FILE_TOO_LARGE': 'The photo is too large (10 MB max).',
   'errors.INVALID_IMAGE': 'The file is not a valid image.',
+  'errors.IMAGE_TOO_LARGE': 'The photo dimensions are too large (about 100 megapixels max).',
   'errors.UPLOAD_MISSING_FILE': 'Please choose a photo.',
   'errors.RATE_LIMITED': 'You are posting too fast, please try again in a few minutes.',
 }
