@@ -138,6 +138,7 @@ export const vi = {
   'errors.UNSUPPORTED_IMAGE': 'Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP.',
   'errors.FILE_TOO_LARGE': 'Ảnh quá lớn (tối đa 10 MB).',
   'errors.INVALID_IMAGE': 'Tệp không phải ảnh hợp lệ.',
+  'errors.IMAGE_TOO_LARGE': 'Ảnh có kích thước quá lớn (tối đa khoảng 100 megapixel).',
   'errors.UPLOAD_MISSING_FILE': 'Hãy chọn một ảnh.',
   'errors.RATE_LIMITED': 'Bạn gửi quá nhanh, vui lòng thử lại sau ít phút.',
 } as const

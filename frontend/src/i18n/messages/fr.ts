@@ -138,6 +138,7 @@ export const fr: Messages = {
   'errors.UNSUPPORTED_IMAGE': 'Seules les photos JPEG, PNG ou WebP sont acceptées.',
   'errors.FILE_TOO_LARGE': 'La photo est trop lourde (10 Mo max).',
   'errors.INVALID_IMAGE': 'Le fichier n’est pas une image valide.',
+  'errors.IMAGE_TOO_LARGE': 'Les dimensions de la photo sont trop grandes (environ 100 mégapixels max).',
   'errors.UPLOAD_MISSING_FILE': 'Veuillez choisir une photo.',
   'errors.RATE_LIMITED': 'Vous publiez trop vite, réessayez dans quelques minutes.',
 }
