@@ -1,0 +1,26 @@
+#!/bin/sh
+# Every push runs the full check suite first (format, lint, types, builds, unit, integration, E2E): what reaches
+# GitHub has passed locally, and CI confirms it. Enabled by `npm install` (prepare script → core.hooksPath).
+set -e
+
+# The checks run on the working tree; it must equal the commit being pushed.
+if [ -n "$(git status --porcelain)" ]; then
+  echo "pre-push: commit or stash your changes first, so the checks run on exactly what is pushed." >&2
+  git status --short >&2
+  exit 1
+fi
+
+# Branch deletions push nothing to check.
+deleting=true
+while read -r _local_ref local_sha _remote_ref _remote_sha; do
+  [ "$local_sha" != "0000000000000000000000000000000000000000" ] && deleting=false
+done
+[ "$deleting" = true ] && exit 0
+
+if ! docker info >/dev/null 2>&1; then
+  echo "pre-push: Docker is not running (integration tests and E2E need PostGIS). Start Docker, then 'npm run db:up'." >&2
+  exit 1
+fi
+
+echo "pre-push: npm run verify (full checks, ~2–3 min)…"
+npm run verify
