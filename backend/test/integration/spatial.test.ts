@@ -1,6 +1,6 @@
 // PostGIS behaviour behind the pois / regions / tiles endpoints, against known places (test/fixtures/places.ts).
 import { VectorTile } from '@mapbox/vector-tile'
-import Pbf from 'pbf'
+import { PbfReader } from 'pbf'
 import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createApp } from '../../src/app.js'
@@ -126,7 +126,7 @@ describe('GET /tiles/:layer/:z/:x/:y.pbf (ST_AsMVT)', () => {
       .expect(200)
     expect(res.headers['content-type']).toBe('application/vnd.mapbox-vector-tile')
     expect(res.headers['cache-control']).toMatch(/max-age=\d+/)
-    const layer = new VectorTile(new Pbf(res.body as Buffer)).layers.pois
+    const layer = new VectorTile(new PbfReader(res.body as Buffer)).layers.pois
     const tileNames = Array.from({ length: layer?.length ?? 0 }, (_, i) => layer?.feature(i).properties.name)
     expect(tileNames).toContain('Tour Eiffel')
     expect(tileNames).not.toContain('Ancien spot') // soft-deleted
