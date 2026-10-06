@@ -1,0 +1,39 @@
+# Weekly dependency updates, opened as PRs into develop (same flow as any change: CI must pass before merging).
+# Minor and patch updates are grouped into one PR per kind; each major update gets its own PR.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    open-pull-requests-limit: 5
+    groups:
+      production-dependencies:
+        dependency-type: production
+        update-types: [minor, patch]
+      development-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Kept on the TypeScript version VS Code ships, so editor errors match `npm run typecheck`.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      # Types follow the Node major in .nvmrc (22), not the latest Node.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: Europe/Paris
+    groups:
+      github-actions:
+        patterns: ['*']
