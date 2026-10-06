@@ -51,7 +51,7 @@ export default defineConfig({
         'db/import/report.ts',
         'src/server.ts',
       ],
-      reporter: ['text-summary', 'html'],
+      reporter: ['text-summary', 'html', 'json-summary'],
     },
   },
 })

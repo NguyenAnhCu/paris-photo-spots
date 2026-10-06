@@ -10,6 +10,11 @@ export default defineConfig({
     setupFiles: ['src/test/setup.ts'],
     restoreMocks: true,
     unstubGlobals: true,
-    coverage: { provider: 'v8', include: ['src/**/*.{ts,tsx}'], exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**'] },
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**'],
+      reporter: ['text-summary', 'html', 'json-summary'],
+    },
   },
 })
