@@ -3,7 +3,7 @@ import { spotRepository, type SpotRow } from './spot.repository.js'
 import { resizeCommonsThumb, spotService } from './spot.service.js'
 
 vi.mock('./spot.repository.js', () => ({
-  spotRepository: { listAll: vi.fn(), byId: vi.fn(), findWithin: vi.fn(), insertUserSpot: vi.fn() },
+  spotRepository: { listAll: vi.fn(), byId: vi.fn(), insertUserSpotUnlessDuplicate: vi.fn() },
 }))
 const repo = vi.mocked(spotRepository)
 
@@ -98,11 +98,10 @@ describe('spotService.create', () => {
   }
 
   it('creates the spot with the typed name as the name in the UI language, then returns its detail', async () => {
-    repo.findWithin.mockResolvedValue(null)
-    repo.insertUserSpot.mockResolvedValue('new-id')
+    repo.insertUserSpotUnlessDuplicate.mockResolvedValue({ id: 'new-id' })
     repo.byId.mockResolvedValue(row({ id: 'new-id', name: 'Rue Crémieux', source: 'user' }))
     const created = await spotService.create(body)
-    expect(repo.insertUserSpot).toHaveBeenCalledWith(
+    expect(repo.insertUserSpotUnlessDuplicate).toHaveBeenCalledWith(
       expect.objectContaining({
         name: 'Rue Crémieux',
         photoCategory: 'street',
@@ -110,20 +109,20 @@ describe('spotService.create', () => {
         lat: 48.8473,
         tip: null,
         nameI18n: { vi: 'Rue Crémieux' },
+        duplicateRadiusM: 30,
       }),
     )
     expect(created).toMatchObject({ id: 'new-id', user_created: true })
   })
 
-  it('checks for duplicates within SPOT_DUPLICATE_RADIUS_M (30 m)', async () => {
-    repo.findWithin.mockResolvedValue({ id: 'existing', name: 'Rue Crémieux' })
+  it('answers 409 SPOT_DUPLICATE with the existing id when a spot is already within 30 m', async () => {
+    repo.insertUserSpotUnlessDuplicate.mockResolvedValue({ duplicate: { id: 'existing', name: 'Rue Crémieux' } })
     await expect(spotService.create(body)).rejects.toMatchObject({
       code: 'SPOT_DUPLICATE',
       status: 409,
       details: [{ id: 'existing' }],
     })
-    expect(repo.findWithin).toHaveBeenCalledWith(2.3708, 48.8473, 30)
-    expect(repo.insertUserSpot).not.toHaveBeenCalled()
+    expect(repo.byId).not.toHaveBeenCalled()
   })
 
   it('refuses locations outside the supported area without touching the database', async () => {
@@ -131,6 +130,6 @@ describe('spotService.create', () => {
       code: 'OUT_OF_AREA',
       status: 400,
     })
-    expect(repo.findWithin).not.toHaveBeenCalled()
+    expect(repo.insertUserSpotUnlessDuplicate).not.toHaveBeenCalled()
   })
 })

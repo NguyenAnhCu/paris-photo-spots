@@ -18,6 +18,9 @@ export type SpotRow = {
   source: string
 }
 
+// Transaction-scoped advisory lock key (any constant bigint, unique within this database).
+const CREATE_USER_SPOT_LOCK = 7_301_001
+
 // photo_count via a grouped subquery: one pass over photos instead of one count per spot.
 const SPOT_SELECT = `
   SELECT p.id, p.name, p.name_i18n, p.photo_category, p.crowd_level, p.best_time, p.tip, p.source,
@@ -39,33 +42,36 @@ export const spotRepository = {
     return rows[0] ?? null
   },
 
-  async findWithin(lng: number, lat: number, radiusM: number): Promise<{ id: string; name: string } | null> {
-    const { rows } = await pool.query<{ id: string; name: string }>(
-      `SELECT id, name FROM pois
-       WHERE deleted_at IS NULL AND photo_category IS NOT NULL
-         AND ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
-       ORDER BY geom::geography <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-       LIMIT 1`,
-      [lng, lat, radiusM],
-    )
-    return rows[0] ?? null
-  },
-
-  // User-created spot. Nearest station / zone / walk are computed right away (same rule as the import's
-  // postprocess.sql) so the spot is ready for the future routing feature. source_ref = id keeps the
-  // (source, source_ref) unique index meaningful.
-  async insertUserSpot(input: {
+  // User-created spot, unless a visible spot already exists within duplicateRadiusM. Nearest station / zone / walk
+  // are computed right away (same rule as the import's postprocess.sql) so the spot is ready for the future routing
+  // feature. source_ref = id keeps the (source, source_ref) unique index meaningful.
+  async insertUserSpotUnlessDuplicate(input: {
     name: string
     photoCategory: PhotoCategory
     lng: number
     lat: number
     tip: string | null
     nameI18n: Record<string, string>
+    duplicateRadiusM: number
     walkMetersPerMinute: number
     maxWalkMeters: number
-  }): Promise<string> {
-    // Two statements: a data-modifying CTE cannot UPDATE the row its own INSERT created (same snapshot).
+  }): Promise<{ id: string } | { duplicate: { id: string; name: string } }> {
     return withTransaction(async (client) => {
+      // Check and insert must not interleave with another request, or simultaneous posts at one place all pass the
+      // check (20 parallel posts created up to 20 spots). User spots are rare: one lock for all of them is enough,
+      // and unlike a per-area lock it cannot miss two points on either side of an area boundary.
+      await client.query('SELECT pg_advisory_xact_lock($1)', [CREATE_USER_SPOT_LOCK])
+      const { rows: near } = await client.query<{ id: string; name: string }>(
+        `SELECT id, name FROM pois
+         WHERE deleted_at IS NULL AND photo_category IS NOT NULL
+           AND ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
+         ORDER BY geom::geography <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+         LIMIT 1`,
+        [input.lng, input.lat, input.duplicateRadiusM],
+      )
+      if (near[0]) return { duplicate: near[0] }
+
+      // Two statements: a data-modifying CTE cannot UPDATE the row its own INSERT created (same snapshot).
       const { rows } = await client.query<{ id: string }>(
         `INSERT INTO pois (source, name, category, photo_category, tip, name_i18n, crowd_level, geom)
          VALUES ('user', $1, 'user_spot', $2, $3, $4::jsonb, 2, ST_SetSRID(ST_MakePoint($5, $6), 4326))
@@ -89,7 +95,7 @@ export const spotRepository = {
          WHERE p.id = $1`,
         [id, input.walkMetersPerMinute, input.maxWalkMeters],
       )
-      return id
+      return { id }
     })
   },
 }

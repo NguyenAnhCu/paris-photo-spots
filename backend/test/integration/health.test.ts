@@ -1,12 +1,8 @@
 // Smoke test for the integration setup: the container is up, migrated, and the app talks to it.
 import request from 'supertest'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createApp } from '../../src/app.js'
 import { pool } from '../../src/db/pool.js'
-
-afterAll(async () => {
-  await pool.end()
-})
 
 describe('integration setup', () => {
   it('migrates the database (PostGIS enabled, tables present)', async () => {

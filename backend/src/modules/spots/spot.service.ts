@@ -68,12 +68,7 @@ export const spotService = {
     if (!isInBBox([body.lng, body.lat], SUPPORTED_SPOT_BBOX)) {
       throw new AppError('OUT_OF_AREA', 400, 'Location is outside the supported area')
     }
-    // Block duplicates of an existing spot a few metres away.
-    const existing = await spotRepository.findWithin(body.lng, body.lat, env.SPOT_DUPLICATE_RADIUS_M)
-    if (existing) {
-      throw new AppError('SPOT_DUPLICATE', 409, `A spot already exists here: ${existing.name}`, [{ id: existing.id }])
-    }
-    const id = await spotRepository.insertUserSpot({
+    const result = await spotRepository.insertUserSpotUnlessDuplicate({
       name: body.name,
       photoCategory: body.photo_category,
       lng: body.lng,
@@ -81,9 +76,15 @@ export const spotService = {
       tip: body.tip || null,
       // The author typed the name in the UI language: make it the localized name for that language too.
       nameI18n: { [body.lang]: body.name },
+      // Block duplicates of an existing spot a few metres away.
+      duplicateRadiusM: env.SPOT_DUPLICATE_RADIUS_M,
       walkMetersPerMinute: env.WALK_METERS_PER_MINUTE,
       maxWalkMeters: env.MAX_WALK_METERS,
     })
-    return this.byId(id, body.lang)
+    if ('duplicate' in result) {
+      const { id, name } = result.duplicate
+      throw new AppError('SPOT_DUPLICATE', 409, `A spot already exists here: ${name}`, [{ id }])
+    }
+    return this.byId(result.id, body.lang)
   },
 }
