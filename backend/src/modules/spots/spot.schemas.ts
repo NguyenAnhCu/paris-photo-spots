@@ -1,7 +1,16 @@
 import { z } from 'zod'
 import { env } from '../../config/env.js'
 
-export const PHOTO_CATEGORIES = ['landmark', 'street', 'skyline', 'bridge', 'park', 'rooftop', 'wedding', 'suburb'] as const
+export const PHOTO_CATEGORIES = [
+  'landmark',
+  'street',
+  'skyline',
+  'bridge',
+  'park',
+  'rooftop',
+  'wedding',
+  'suburb',
+] as const
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number]
 
 export const SPOT_LANGS = ['vi', 'en', 'fr'] as const

@@ -1,19 +1,21 @@
 import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { mediaUrl } from '../../api/client'
-import { useSpotPhotos } from '../../hooks/useSpots'
-import { useI18n } from '../../i18n/I18nContext'
-import { translateApiError } from '../../i18n/apiError'
-import { relativeTime } from '../../lib/time'
-import type { SpotDetail } from '../../types/spot'
-import { IconButton, Photo, PillButton, Tag } from '../ui'
+import { mediaUrl } from '@/api/client'
+import { useSpotPhotos } from '@/hooks/useSpots'
+import { useI18n } from '@/i18n/useI18n'
+import { translateApiError } from '@/i18n/apiError'
+import { relativeTime } from '@/lib/time'
+import type { SpotDetail } from '@/types/spot'
+import { IconButton, Photo, PillButton, Tag } from '@/components/ui'
 import { ExifPills } from './ExifPills'
 import { StateMessage } from './StateMessage'
 import './PhotoGallery.css'
 
 export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 3 | 4 }) {
   const { t, locale } = useI18n()
-  const { data, isPending, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useSpotPhotos(spot.id)
+  const { data, isPending, isError, error, refetch, hasNextPage, fetchNextPage, isFetchingNextPage } = useSpotPhotos(
+    spot.id,
+  )
   const photos = data?.pages.flatMap((p) => p.items) ?? []
   const total = data?.pages[0]?.total ?? spot.photoCount
   const [index, setIndex] = useState<number | null>(null)
@@ -69,7 +71,11 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
               <PillButton variant="tonal" icon={LayoutGrid} onClick={() => setIndex(null)}>
                 {t('photos.grid')}
               </PillButton>
-              <IconButton icon={ChevronRight} label={t('photos.next')} onClick={() => setIndex((index + 1) % photos.length)} />
+              <IconButton
+                icon={ChevronRight}
+                label={t('photos.next')}
+                onClick={() => setIndex((index + 1) % photos.length)}
+              />
             </div>
           </div>
           <ExifPills photo={current} />

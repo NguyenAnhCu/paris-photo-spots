@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
-import { useI18n } from '../../i18n/I18nContext'
-import { categoryLabelKey } from '../../i18n/keys'
-import type { SpotCategory } from '../../types/spot'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import type { SpotCategory } from '@/types/spot'
 import { ALL_CATEGORIES_ICON, CATEGORY_ICON } from './categoryIcons'
 import './ui.css'
 
@@ -15,7 +15,15 @@ type PillButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   block?: boolean
 }
 
-export function PillButton({ variant = 'tonal', icon: Icon, size = 'md', block, className, children, ...rest }: PillButtonProps) {
+export function PillButton({
+  variant = 'tonal',
+  icon: Icon,
+  size = 'md',
+  block,
+  className,
+  children,
+  ...rest
+}: PillButtonProps) {
   const classes = ['pill', `pill--${variant}`, size === 'lg' && 'pill--lg', block && 'pill--block', className]
   return (
     <button type="button" className={classes.filter(Boolean).join(' ')} {...rest}>
@@ -30,7 +38,13 @@ type IconButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label
 
 export function IconButton({ icon: Icon, label, className, ...rest }: IconButtonProps) {
   return (
-    <button type="button" className={['icon-btn', className].filter(Boolean).join(' ')} aria-label={label} title={label} {...rest}>
+    <button
+      type="button"
+      className={['icon-btn', className].filter(Boolean).join(' ')}
+      aria-label={label}
+      title={label}
+      {...rest}
+    >
       <Icon size={18} strokeWidth={2} aria-hidden="true" />
     </button>
   )
@@ -51,8 +65,18 @@ export function CategoryChip({ category, selected, onSelect }: CategoryChipProps
 
 type TagTone = 'tonal' | 'neutral' | 'paper' | 'mono' | 'crowd-1' | 'crowd-2' | 'crowd-3'
 
-export function Tag({ tone = 'tonal', children, className }: { tone?: TagTone; children: ReactNode; className?: string }) {
-  return <span className={['tag', tone !== 'tonal' && `tag--${tone}`, className].filter(Boolean).join(' ')}>{children}</span>
+export function Tag({
+  tone = 'tonal',
+  children,
+  className,
+}: {
+  tone?: TagTone
+  children: ReactNode
+  className?: string
+}) {
+  return (
+    <span className={['tag', tone !== 'tonal' && `tag--${tone}`, className].filter(Boolean).join(' ')}>{children}</span>
+  )
 }
 
 type StatTileProps = { icon: LucideIcon; label: ReactNode; value: ReactNode; stacked?: boolean }

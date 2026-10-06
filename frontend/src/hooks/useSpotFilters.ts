@@ -1,9 +1,9 @@
 import { useCallback, useDeferredValue, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useI18n } from '../i18n/I18nContext'
-import { categoryLabelKey } from '../i18n/keys'
-import { matchesQuery } from '../lib/search'
-import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '../types/spot'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import { matchesQuery } from '@/lib/search'
+import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '@/types/spot'
 
 const isCategory = (v: string | null): v is SpotCategory => SPOT_CATEGORIES.includes(v as SpotCategory)
 
@@ -33,13 +33,26 @@ export function useSpotFilters() {
     query,
     setCategory: (c: SpotCategory | 'all') => update('cat', c === 'all' ? null : c),
     setQuery: (q: string) => update('q', q || null),
-    clear: () => setParams((prev) => { const next = new URLSearchParams(prev); next.delete('cat'); next.delete('q'); return next }, { replace: true }),
+    clear: () =>
+      setParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.delete('cat')
+          next.delete('q')
+          return next
+        },
+        { replace: true },
+      ),
     active: category !== 'all' || query.trim() !== '',
   }
 }
 
 // Name and category label are searched, accent-insensitive; deferred so typing stays smooth with ~260 cards.
-export function useFilteredSpots(collection: SpotCollection | undefined, category: SpotCategory | 'all', query: string) {
+export function useFilteredSpots(
+  collection: SpotCollection | undefined,
+  category: SpotCategory | 'all',
+  query: string,
+) {
   const { t } = useI18n()
   const deferredQuery = useDeferredValue(query)
   return useMemo(() => {

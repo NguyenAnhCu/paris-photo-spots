@@ -1,9 +1,17 @@
 import type { ReactNode } from 'react'
-import { useI18n } from '../../i18n/I18nContext'
-import { PillButton } from '../ui'
+import { useI18n } from '@/i18n/useI18n'
+import { PillButton } from '@/components/ui'
 
 // Loading / empty / error states (design.md "Trạng thái phải có"): never a blank panel.
-export function StateMessage({ children, onRetry, action }: { children: ReactNode; onRetry?: () => void; action?: ReactNode }) {
+export function StateMessage({
+  children,
+  onRetry,
+  action,
+}: {
+  children: ReactNode
+  onRetry?: () => void
+  action?: ReactNode
+}) {
   const { t } = useI18n()
   return (
     <div className="state-message" role="status">

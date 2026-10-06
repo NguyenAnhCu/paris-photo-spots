@@ -1,0 +1,127 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+# Jobs only read the repository; coverage-report additionally writes its PR comment.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Format
+        run: npm run format:check
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build frontend
+        run: npm run build -w frontend
+      - name: Build backend
+        run: npm run build -w backend
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+  test-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Backend unit tests
+        run: npm run test:unit -w backend
+      # Frontend coverage is measured here; backend coverage in test-integration (it needs the database).
+      - name: Frontend unit tests (with coverage)
+        run: npm run test:coverage -w frontend
+      - name: Coverage summary
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/coverage-report.mjs "Frontend (unit)=frontend/coverage/coverage-summary.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-frontend
+          path: frontend/coverage/coverage-summary.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  test-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Testcontainers starts postgis/postgis:17-3.4 on the runner's Docker and runs the migrations.
+      # Unit tests run again here (≈ 1 s) so the coverage covers the whole backend.
+      - name: Backend unit + integration tests (PostGIS, with coverage)
+        run: npm run test:coverage -w backend
+      - name: Coverage summary
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/coverage-report.mjs "Backend (unit + integration)=backend/coverage/coverage-summary.json" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-backend
+          path: backend/coverage/coverage-summary.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # One coverage comment per PR, updated on each push. Information only: not a required check, never blocks merging.
+  # Skipped where the token cannot write (PRs from forks, Dependabot).
+  coverage-report:
+    needs: [test-unit, test-integration]
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request'
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.actor != 'dependabot[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: coverage-*
+          path: coverage
+      - name: Build the report
+        run: >-
+          node .github/scripts/coverage-report.mjs
+          "Backend (unit + integration)=coverage/coverage-backend/coverage-summary.json"
+          "Frontend (unit)=coverage/coverage-frontend/coverage-summary.json" > comment.md
+      - name: Create or update the PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- coverage-report -->"))) | .id' | head -n 1)
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$REPO/issues/comments/$id" -F body=@comment.md > /dev/null
+          else
+            gh api "repos/$REPO/issues/$PR/comments" -F body=@comment.md > /dev/null
+          fi

@@ -1,13 +1,27 @@
 {
   "name": "paris-photo-spots",
   "private": true,
-  "workspaces": ["backend", "frontend"],
-  "engines": { "node": ">=22" },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down",
     "dev:backend": "npm run dev -w backend",
     "dev:frontend": "npm run dev -w frontend",
-    "typecheck": "npm run typecheck --workspaces"
+    "typecheck": "npm run typecheck --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test:unit -w backend && npm run test -w frontend",
+    "test:integration": "npm run test:integration -w backend",
+    "format": "prettier --write backend frontend package.json README.md docker-compose.yml .prettierrc.json .github",
+    "format:check": "prettier --check backend frontend package.json README.md docker-compose.yml .prettierrc.json .github"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
+    "prettier": "^3.9.9"
   }
 }

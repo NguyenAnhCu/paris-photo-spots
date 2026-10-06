@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { config } from '../config'
+import { config } from '@/config'
 
 export type Breakpoint = 'desktop' | 'tablet' | 'mobile'
 

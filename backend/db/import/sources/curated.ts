@@ -11,7 +11,16 @@ const CURATED_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), '..
 // Same reasoning as Muséofile: the designer's pin and the OSM pin of a place can be a few hundred metres apart.
 const MATCH_RADIUS_M = 300
 
-export const PHOTO_CATEGORIES = ['landmark', 'street', 'skyline', 'bridge', 'park', 'rooftop', 'wedding', 'suburb'] as const
+export const PHOTO_CATEGORIES = [
+  'landmark',
+  'street',
+  'skyline',
+  'bridge',
+  'park',
+  'rooftop',
+  'wedding',
+  'suburb',
+] as const
 export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number]
 export const BEST_TIMES = ['sunrise', 'early_morning', 'midday', 'late_afternoon', 'sunset'] as const
 
@@ -60,7 +69,12 @@ export async function importCurated(client: pg.ClientBase, _ctx: ImportContext):
 
   for (const spot of spots) {
     const tag = curatedTag(spot)
-    const { rows: candidates } = await client.query<{ id: string; name: string; has_wikidata: boolean; distance_m: number }>(
+    const { rows: candidates } = await client.query<{
+      id: string
+      name: string
+      has_wikidata: boolean
+      distance_m: number
+    }>(
       `SELECT id, name, wikidata IS NOT NULL AS has_wikidata,
               ST_Distance(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance_m
        FROM pois
@@ -84,10 +98,10 @@ export async function importCurated(client: pg.ClientBase, _ctx: ImportContext):
     )
 
     if (match) {
-      await client.query(
-        `UPDATE pois SET tags = array_append(tags, $2) WHERE id = $1 AND NOT ($2 = ANY(tags))`,
-        [match.id, tag],
-      )
+      await client.query(`UPDATE pois SET tags = array_append(tags, $2) WHERE id = $1 AND NOT ($2 = ANY(tags))`, [
+        match.id,
+        tag,
+      ])
       stats.matched = (stats.matched ?? 0) + 1
       continue
     }

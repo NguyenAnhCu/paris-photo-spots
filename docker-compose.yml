@@ -9,11 +9,11 @@ services:
       POSTGRES_DB: pmv
       TZ: UTC
     ports:
-      - "${DB_HOST_PORT:-5433}:5432"
+      - '${DB_HOST_PORT:-5433}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pmv -d pmv"]
+      test: ['CMD-SHELL', 'pg_isready -U pmv -d pmv']
       interval: 5s
       timeout: 3s
       retries: 10

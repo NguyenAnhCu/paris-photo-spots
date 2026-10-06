@@ -1,38 +1,45 @@
 import { CirclePlus, MapPin, Search, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
-import { useMatch } from 'react-router-dom'
-import { useSpotFilters } from '../../hooks/useSpotFilters'
-import { useI18n } from '../../i18n/I18nContext'
-import { categoryLabelKey } from '../../i18n/keys'
-import { useSpotNav } from '../../pages/mapUi'
-import { SPOT_CATEGORIES } from '../../types/spot'
-import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher'
-import { CategoryChip, PillButton } from '../ui'
+import { useLocation, useMatch, useNavigate } from 'react-router-dom'
+import { useSlashToSearch } from '@/hooks/useSlashToSearch'
+import { useSpotFilters } from '@/hooks/useSpotFilters'
+import { useI18n } from '@/i18n/useI18n'
+import { categoryLabelKey } from '@/i18n/keys'
+import { useSpotNav } from '@/pages/mapUi'
+import { SPOT_CATEGORIES } from '@/types/spot'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
+import { CategoryChip, PillButton } from '@/components/ui'
 import './TopBar.css'
-
-// "/" focuses search from anywhere, unless the user is already typing in a field.
-export function useSlashToSearch(input: React.RefObject<HTMLInputElement | null>) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null
-      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
-      if (e.key === '/' && !typing) {
-        e.preventDefault()
-        input.current?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [input])
-}
 
 export function SearchField({ variant }: { variant: 'bar' | 'column' }) {
   const { t } = useI18n()
   const { query, setQuery } = useSpotFilters()
-  const nav = useSpotNav()
+  const navigate = useNavigate()
+  const { search } = useLocation()
   const onList = useMatch('/')
   const ref = useRef<HTMLInputElement>(null)
   useSlashToSearch(ref)
+
+  // The field keeps its own text while it has focus: the URL catches up a little later (router transition), and a
+  // controlled input bound straight to it dropped characters when typing fast ("cau" → "u"). When the field is not
+  // being typed in, the URL wins (Back button, "clear filters").
+  const [text, setText] = useState(query)
+  const [focused, setFocused] = useState(false)
+  if (!focused && text !== query) setText(query)
+
+  const onChange = (value: string) => {
+    setText(value)
+    if (variant === 'bar' && !onList) {
+      // Desktop design: typing a search brings you back to the list view (with the new query in one navigation).
+      const params = new URLSearchParams(search)
+      if (value) params.set('q', value)
+      else params.delete('q')
+      navigate({ pathname: '/', search: params.toString() })
+    } else {
+      setQuery(value)
+    }
+  }
+
   return (
     <label className={`search search--${variant}`}>
       <span className="visually-hidden">{t('search.label')}</span>
@@ -40,12 +47,13 @@ export function SearchField({ variant }: { variant: 'bar' | 'column' }) {
       <input
         ref={ref}
         type="search"
-        value={query}
+        value={text}
         placeholder={t('search.placeholder')}
-        onChange={(e) => {
-          setQuery(e.target.value)
-          // Desktop design: typing a search brings you back to the list view.
-          if (variant === 'bar' && !onList) nav.toList()
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setFocused(false)
+          setText(query)
         }}
       />
     </label>
@@ -109,7 +117,7 @@ export function TopBar() {
   const { t } = useI18n()
   const nav = useSpotNav()
   return (
-    <>
+    <header>
       <div className="topbar">
         <div className="topbar__pill glass">
           <button type="button" className="topbar__brand" onClick={nav.toList} aria-label={t('app.home')}>
@@ -128,6 +136,6 @@ export function TopBar() {
           {t('add.button')}
         </PillButton>
       </div>
-    </>
+    </header>
   )
 }

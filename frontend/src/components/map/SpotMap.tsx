@@ -12,12 +12,13 @@ import {
   type MapRef,
 } from '@vis.gl/react-maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import './maplibreWorker'
 import type { ExpressionSpecification, GeoJSONSource } from 'maplibre-gl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { config } from '../../config'
-import { useI18n } from '../../i18n/I18nContext'
-import type { LngLat } from '../../lib/geo'
-import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '../../types/spot'
+import { config } from '@/config'
+import { useI18n } from '@/i18n/useI18n'
+import type { LngLat } from '@/lib/geo'
+import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '@/types/spot'
 import { PIN_COLOR, pinSvg, registerPinImages } from './pins'
 import './SpotMap.css'
 
@@ -41,7 +42,7 @@ const CLUSTER_COUNT = 'spot-cluster-count'
 const PINS = 'spot-pins'
 const PINS_ACTIVE = 'spot-pins-active'
 const CLUSTER_MAX_ZOOM = 13
-const CLUSTER_RADIUS = 46
+const CLUSTER_RADIUS = 64 // px; 46 was too dense for ~260 spots at the default zoom (user choice 2026-10-05)
 const FLY_DURATION_MS = 800
 
 const clusterLayer: LayerProps = {
@@ -68,7 +69,17 @@ const clusterCountLayer: LayerProps = {
 
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft, onSelect, onHover, onPlace }: SpotMapProps) {
+export function SpotMap({
+  spots,
+  activeIds,
+  focus,
+  leftPadding,
+  showZoom,
+  draft,
+  onSelect,
+  onHover,
+  onPlace,
+}: SpotMapProps) {
   const { t } = useI18n()
   const mapRef = useRef<MapRef>(null)
   const [imagesReady, setImagesReady] = useState(false)
@@ -104,8 +115,7 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
 
   // Camera moves are intentional only: opening a spot (focus.key changes) — not every re-render.
   // A shared link can deliver the spot before the map exists: handleLoad replays the latest focus then.
-  const latestFocus = useRef(focus)
-  latestFocus.current = focus
+  const pendingFocus = useRef<MapFocus | null>(null)
   const flyToFocus = useCallback(
     (target: MapFocus) => {
       mapRef.current?.flyTo({
@@ -118,7 +128,9 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
     [leftPadding],
   )
   useEffect(() => {
-    if (focus && mapRef.current) flyToFocus(focus)
+    if (!focus) return
+    if (mapRef.current) flyToFocus(focus)
+    else pendingFocus.current = focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.key])
 
@@ -132,7 +144,10 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
     if (!map) return
     // MapLibre opens the compact attribution on load; closed it is an (i) button instead of a line across the pins.
     map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
-    if (latestFocus.current) flyToFocus(latestFocus.current)
+    if (pendingFocus.current) {
+      flyToFocus(pendingFocus.current)
+      pendingFocus.current = null
+    }
     registerPinImages(map, SPOT_CATEGORIES)
       .then(() => setImagesReady(true))
       .catch((err: unknown) => console.error('Pin images failed', err))
@@ -167,7 +182,8 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
   const handleMove = useCallback(
     (e: MapLayerMouseEvent) => {
       const feature = e.features?.[0]
-      const id = feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
+      const id =
+        feature && feature.layer.id !== CLUSTERS ? ((feature.properties?.id as string | undefined) ?? null) : null
       const canvas = mapRef.current?.getMap().getCanvas()
       if (canvas) canvas.style.cursor = onPlace ? 'crosshair' : feature ? 'pointer' : ''
       if (hovered.current !== id) {
@@ -178,12 +194,14 @@ export function SpotMap({ spots, activeIds, focus, leftPadding, showZoom, draft,
     [onHover, onPlace],
   )
 
+  const draftPosition = draft?.position ?? null
+  const draftCategory = draft?.category ?? null
   const draftPin = useMemo(
     () =>
-      draft?.position
-        ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pinSvg(draft.category ?? 'add', 40, PIN_COLOR.draft))}`
+      draftPosition
+        ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(pinSvg(draftCategory ?? 'add', 40, PIN_COLOR.draft))}`
         : null,
-    [draft?.position, draft?.category],
+    [draftPosition, draftCategory],
   )
 
   return (

@@ -1,7 +1,7 @@
 // Simulated hourly crowd profile (no real data source yet — the UI must label it "ước tính" / estimate).
 // Formula from the design prototype: Gaussian around 14h (σ 4.2),
 // scaled by crowdLevel/3, extra peak at 19h for sunset spots, small deterministic per-spot jitter.
-import type { CrowdLevel } from '../types/spot'
+import type { CrowdLevel } from '@/types/spot'
 
 export const FIRST_HOUR = 6
 export const LAST_HOUR = 22
@@ -27,7 +27,8 @@ export function crowdProfile(crowdLevel: CrowdLevel, sunsetPeak: boolean, seed: 
   for (let hour = FIRST_HOUR; hour <= LAST_HOUR; hour++) {
     const jitter = (((seed * 7 + hour * 13) % 10) / 9) * JITTER_MAX
     let value =
-      (crowdLevel / 3) * (BASE_SHARE + (1 - BASE_SHARE) * Math.exp(-((hour - PEAK_HOUR) ** 2) / (2 * PEAK_SIGMA ** 2))) +
+      (crowdLevel / 3) *
+        (BASE_SHARE + (1 - BASE_SHARE) * Math.exp(-((hour - PEAK_HOUR) ** 2) / (2 * PEAK_SIGMA ** 2))) +
       jitter
     if (sunsetPeak) value += SUNSET_WEIGHT * Math.exp(-((hour - SUNSET_HOUR) ** 2) / 4)
     raw.push({ hour, value })

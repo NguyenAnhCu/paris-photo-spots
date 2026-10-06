@@ -1,6 +1,6 @@
 import { Languages } from 'lucide-react'
-import { useI18n } from '../../i18n/I18nContext'
-import { LOCALE_NAMES, LOCALES, isLocale } from '../../i18n/translate'
+import { useI18n } from '@/i18n/useI18n'
+import { LOCALE_NAMES, LOCALES, isLocale } from '@/i18n/translate'
 import './LanguageSwitcher.css'
 
 // Not in the design (Vietnamese-only prototype); styled as a tonal pill to blend in. Each language names itself.

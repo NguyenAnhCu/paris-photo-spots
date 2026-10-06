@@ -1,15 +1,16 @@
 import { ArrowLeft, Camera, Clock, Cloud, Images, Users, X } from 'lucide-react'
 import { useEffect } from 'react'
-import { mediaUrl } from '../../api/client'
-import { useSpot, useSpotPhotos, useWeather } from '../../hooks/useSpots'
-import { useI18n } from '../../i18n/I18nContext'
-import { translateApiError } from '../../i18n/apiError'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey, weatherKey } from '../../i18n/keys'
-import { formatCoords } from '../../lib/geo'
-import { useMapUi, useSpotNav } from '../../pages/mapUi'
-import type { SpotDetail as Spot } from '../../types/spot'
-import { IconButton, Photo, PillButton, StatTile, Tag } from '../ui'
-import { CrowdChart, useCrowdNow } from './CrowdChart'
+import { mediaUrl } from '@/api/client'
+import { useSpot, useSpotPhotos, useWeather } from '@/hooks/useSpots'
+import { useI18n } from '@/i18n/useI18n'
+import { translateApiError } from '@/i18n/apiError'
+import { bestTimeKey, categoryLabelKey, crowdLabelKey, weatherKey } from '@/i18n/keys'
+import { formatCoords } from '@/lib/geo'
+import { useMapUi, useSpotNav } from '@/pages/mapUi'
+import type { SpotDetail as Spot } from '@/types/spot'
+import { IconButton, Photo, PillButton, StatTile, Tag } from '@/components/ui'
+import { useCrowdNow } from '@/hooks/useCrowdNow'
+import { CrowdChart } from './CrowdChart'
 import { ExifPills } from './ExifPills'
 import { CommunityPhotos } from './PhotoGallery'
 import { StateMessage } from './StateMessage'
@@ -53,7 +54,12 @@ function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) 
           value={t(crowdLabelKey(crowd.label))}
         />
         <StatTile stacked={stacked} icon={Clock} label={t('detail.bestTime')} value={t(bestTimeKey(spot.bestTime))} />
-        <StatTile stacked={stacked} icon={Cloud} label={t('detail.weather')} value={<WeatherValue lat={spot.lat} lng={spot.lng} />} />
+        <StatTile
+          stacked={stacked}
+          icon={Cloud}
+          label={t('detail.weather')}
+          value={<WeatherValue lat={spot.lat} lng={spot.lng} />}
+        />
       </div>
       <CrowdChart {...crowd} />
       <p className="detail__tip">{spot.tip || t('detail.noTip')}</p>
@@ -117,7 +123,15 @@ export function PhotoCredit({ spot }: { spot: Spot }) {
 }
 
 // Detail and community photos share one panel (design): `view` switches the body, the photos view gets a shorter hero.
-export function SpotPanel({ spotId, layout, view }: { spotId: string; layout: 'panel' | 'page'; view: 'detail' | 'photos' }) {
+export function SpotPanel({
+  spotId,
+  layout,
+  view,
+}: {
+  spotId: string
+  layout: 'panel' | 'page'
+  view: 'detail' | 'photos'
+}) {
   const { t } = useI18n()
   const nav = useSpotNav()
   const { focusSpot } = useMapUi()
@@ -164,11 +178,17 @@ export function SpotPanel({ spotId, layout, view }: { spotId: string; layout: 'p
     <div className="column">
       <div className="column__inner detail-page">
         <div className="detail-page__top">
-          <PillButton variant="tonal" icon={ArrowLeft} onClick={view === 'photos' ? () => nav.toSpot(spotId) : nav.toList}>
+          <PillButton
+            variant="tonal"
+            icon={ArrowLeft}
+            onClick={view === 'photos' ? () => nav.toSpot(spotId) : nav.toList}
+          >
             {view === 'photos' && spot ? spot.name : t('nav.allSpots')}
           </PillButton>
           {spot && view === 'detail' && <Tag>{t(categoryLabelKey(spot.photoCategory))}</Tag>}
-          {spot && view === 'photos' && <span className="detail-page__count">{t('photos.count', { count: spot.photoCount })}</span>}
+          {spot && view === 'photos' && (
+            <span className="detail-page__count">{t('photos.count', { count: spot.photoCount })}</span>
+          )}
         </div>
         {content}
         {spot && view === 'detail' && (

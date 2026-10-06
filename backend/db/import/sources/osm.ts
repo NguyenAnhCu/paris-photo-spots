@@ -45,7 +45,8 @@ type OsmElement = {
 
 const TAG_KEYS = ['tourism', 'historic', 'leisure', 'amenity', 'man_made', 'bridge', 'highway'] as const
 
-const isBridge = (tags: Record<string, string>) => tags.man_made === 'bridge' || (tags.bridge !== undefined && tags.bridge !== 'no')
+const isBridge = (tags: Record<string, string>) =>
+  tags.man_made === 'bridge' || (tags.bridge !== undefined && tags.bridge !== 'no')
 
 // Order matters: an element often has several tags (Sacré-Cœur is tourism=attraction + amenity=place_of_worship),
 // the most specific meaning wins. Day trips come from the curated list in day-trips.ts (applied after dedupe).
@@ -106,7 +107,11 @@ export function toPoi(el: OsmElement): ImportedPoi | null {
 
 // Prefer the representation a visitor would recognise: has Wikidata, is tagged as a tourism feature.
 function score(p: ImportedPoi): number {
-  return (p.wikidata ? 4 : 0) + (p.tags.some((t) => t.startsWith('tourism:')) ? 2 : 0) + (p.sourceRef.startsWith('node/') ? 0 : 1)
+  return (
+    (p.wikidata ? 4 : 0) +
+    (p.tags.some((t) => t.startsWith('tourism:')) ? 2 : 0) +
+    (p.sourceRef.startsWith('node/') ? 0 : 1)
+  )
 }
 
 // Collapses duplicates into the best-scored POI, merging their tags and details: same name within

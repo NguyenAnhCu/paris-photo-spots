@@ -1,16 +1,16 @@
 import { ArrowLeft, MapPin } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { ApiError } from '../../api/client'
-import { useCreateSpot, useSpot, useUploadPhoto } from '../../hooks/useSpots'
-import { useI18n } from '../../i18n/I18nContext'
-import { translateApiError } from '../../i18n/apiError'
-import { categoryLabelKey } from '../../i18n/keys'
-import type { MessageKey } from '../../i18n/messages/vi'
-import { parseExif } from '../../lib/exif'
-import { formatCoords } from '../../lib/geo'
-import { useMapUi, useSpotNav } from '../../pages/mapUi'
-import { SPOT_CATEGORIES, type ExifSummary, type SpotCategory } from '../../types/spot'
-import { PillButton } from '../ui'
+import { ApiError } from '@/api/client'
+import { useCreateSpot, useSpot, useUploadPhoto } from '@/hooks/useSpots'
+import { useI18n } from '@/i18n/useI18n'
+import { translateApiError } from '@/i18n/apiError'
+import { categoryLabelKey } from '@/i18n/keys'
+import type { MessageKey } from '@/i18n/messages/vi'
+import { parseExif } from '@/lib/exif'
+import { formatCoords } from '@/lib/geo'
+import { useMapUi, useSpotNav } from '@/pages/mapUi'
+import { SPOT_CATEGORIES, type ExifSummary, type SpotCategory } from '@/types/spot'
+import { PillButton } from '@/components/ui'
 import './AddForms.css'
 
 const ACCEPT = 'image/jpeg,image/png,image/webp'
@@ -30,9 +30,12 @@ function usePhotoDraft() {
   const [exifState, setExifState] = useState<ExifState>('idle')
 
   // Object URLs hold the whole image in memory until revoked.
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview)
-  }, [preview])
+  useEffect(
+    () => () => {
+      if (preview) URL.revokeObjectURL(preview)
+    },
+    [preview],
+  )
 
   const pick = async (next: File | undefined) => {
     if (!next) return
@@ -64,14 +67,24 @@ function PhotoStep({ draft }: { draft: ReturnType<typeof usePhotoDraft> }) {
           <span className="mono">{t('add.photoHint')}</span>
         </>
       )}
-      <input type="file" accept={ACCEPT} onChange={(e) => draft.pick(e.target.files?.[0])} aria-label={t('add.photoStep')} />
+      <input
+        type="file"
+        accept={ACCEPT}
+        onChange={(e) => draft.pick(e.target.files?.[0])}
+        aria-label={t('add.photoStep')}
+      />
     </label>
   )
 }
 
 function ExifStep({ draft }: { draft: ReturnType<typeof usePhotoDraft> }) {
   const { t } = useI18n()
-  const status = draft.exifState === 'ok' ? t('add.exifOk') : draft.exifState === 'missing' ? t('add.exifMissing') : t('add.exifAuto')
+  const status =
+    draft.exifState === 'ok'
+      ? t('add.exifOk')
+      : draft.exifState === 'missing'
+        ? t('add.exifMissing')
+        : t('add.exifAuto')
   return (
     <fieldset className="add__box add__exif">
       <legend className="visually-hidden">{t('add.exifStep')}</legend>
@@ -102,12 +115,28 @@ function AuthorField({ value, onChange }: { value: string; onChange: (v: string)
   return (
     <label className="field">
       <span className="field__label">{t('add.author')}</span>
-      <input className="input" value={value} maxLength={60} onChange={(e) => onChange(e.target.value)} autoComplete="nickname" />
+      <input
+        className="input"
+        value={value}
+        maxLength={60}
+        onChange={(e) => onChange(e.target.value)}
+        autoComplete="nickname"
+      />
     </label>
   )
 }
 
-function FormShell({ layout, title, onCancel, children }: { layout: 'panel' | 'page'; title: string; onCancel: () => void; children: ReactNode }) {
+function FormShell({
+  layout,
+  title,
+  onCancel,
+  children,
+}: {
+  layout: 'panel' | 'page'
+  title: string
+  onCancel: () => void
+  children: ReactNode
+}) {
   const { t } = useI18n()
   const titleId = useId()
   const head = (
@@ -135,8 +164,7 @@ function FormShell({ layout, title, onCancel, children }: { layout: 'panel' | 'p
   )
 }
 
-const exifPayload = (e: ExifSummary): ExifSummary | undefined =>
-  Object.values(e).some(Boolean) ? e : undefined
+const exifPayload = (e: ExifSummary): ExifSummary | undefined => (Object.values(e).some(Boolean) ? e : undefined)
 
 // The submit button sits at the bottom of a long form: bring a new error into view or nobody sees it.
 function FormError({ children }: { children: ReactNode }) {
@@ -186,10 +214,21 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
     if (!position) return
     setError(null)
     try {
-      const spot = await createSpot.mutateAsync({ name: name.trim(), photoCategory: category, lng: position[0], lat: position[1], tip: tip.trim() || undefined })
+      const spot = await createSpot.mutateAsync({
+        name: name.trim(),
+        photoCategory: category,
+        lng: position[0],
+        lat: position[1],
+        tip: tip.trim() || undefined,
+      })
       if (draft.file) {
         try {
-          await upload.mutateAsync({ spotId: spot.id, file: draft.file, authorName: author.trim() || undefined, exif: exifPayload(draft.exif) })
+          await upload.mutateAsync({
+            spotId: spot.id,
+            file: draft.file,
+            authorName: author.trim() || undefined,
+            exif: exifPayload(draft.exif),
+          })
         } catch (uploadErr) {
           // The spot exists already: say the photo did not make it and offer to open the spot (retry from there).
           setError({ text: `${t('add.uploadFailed')} ${translateApiError(uploadErr, t)}`, existingId: spot.id })
@@ -199,7 +238,9 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
       nav.toSpot(spot.id, { replace: true }) // design: after posting, open the new spot
     } catch (err) {
       const existingId =
-        err instanceof ApiError && err.code === 'SPOT_DUPLICATE' ? (err.details[0] as { id?: string } | undefined)?.id : undefined
+        err instanceof ApiError && err.code === 'SPOT_DUPLICATE'
+          ? (err.details[0] as { id?: string } | undefined)?.id
+          : undefined
       setError({ text: translateApiError(err, t), existingId })
     }
   }
@@ -207,7 +248,12 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
   return (
     <FormShell layout={layout} title={t('add.title')} onCancel={nav.toList}>
       <div className="add__box add__box--dashed add__location">
-        <MapPin size={28} strokeWidth={2} aria-hidden="true" className={position ? 'add__pin add__pin--set' : 'add__pin'} />
+        <MapPin
+          size={28}
+          strokeWidth={2}
+          aria-hidden="true"
+          className={position ? 'add__pin add__pin--set' : 'add__pin'}
+        />
         <div className="add__location-text" aria-live="polite">
           <b>{t('add.locationStep')}</b>
           <span>{locationText}</span>
@@ -222,7 +268,14 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
       <ExifStep draft={draft} />
       <label className="field" htmlFor={nameId}>
         <span className="field__label">{t('add.name')}</span>
-        <input id={nameId} className="input" value={name} maxLength={120} placeholder={t('add.namePlaceholder')} onChange={(e) => setName(e.target.value)} />
+        <input
+          id={nameId}
+          className="input"
+          value={name}
+          maxLength={120}
+          placeholder={t('add.namePlaceholder')}
+          onChange={(e) => setName(e.target.value)}
+        />
       </label>
       <label className="field">
         <span className="field__label">{t('add.category')}</span>
@@ -236,7 +289,13 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
       </label>
       <label className="field">
         <span className="field__label">{t('add.tip')}</span>
-        <textarea className="input" value={tip} maxLength={1000} placeholder={t('add.tipPlaceholder')} onChange={(e) => setTip(e.target.value)} />
+        <textarea
+          className="input"
+          value={tip}
+          maxLength={1000}
+          placeholder={t('add.tipPlaceholder')}
+          onChange={(e) => setTip(e.target.value)}
+        />
       </label>
       {draft.file && <AuthorField value={author} onChange={setAuthor} />}
       {error && (
@@ -269,7 +328,12 @@ export function AddPhotoForm({ spotId, layout }: { spotId: string; layout: 'pane
     if (!draft.file) return
     setError(null)
     try {
-      await upload.mutateAsync({ spotId, file: draft.file, authorName: author.trim() || undefined, exif: exifPayload(draft.exif) })
+      await upload.mutateAsync({
+        spotId,
+        file: draft.file,
+        authorName: author.trim() || undefined,
+        exif: exifPayload(draft.exif),
+      })
       nav.toPhotos(spotId)
     } catch (err) {
       setError(translateApiError(err, t))

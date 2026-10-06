@@ -1,10 +1,12 @@
 {
+  // The project the editor and `npm run typecheck` use: app code, db/ scripts (imports, seeds), tests and test helpers.
+  // Building to dist/ uses tsconfig.build.json (src/ only, no tests).
   "compilerOptions": {
     "target": "ES2023",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
+    "noEmit": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
@@ -13,5 +15,5 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src", "db", "test", "vitest.config.ts"]
 }

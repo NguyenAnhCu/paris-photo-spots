@@ -38,12 +38,10 @@ export async function runImport(client: pg.ClientBase, ctx: ImportContext): Prom
   )
   const runId = runRows[0]?.id ?? ''
   const finish = async (status: RunStatus, exitCode: number, stats: RunStats, error: string | null = null) => {
-    await client.query(`UPDATE import_runs SET status = $2, stats = $3, error = $4, finished_at = NOW() WHERE id = $1`, [
-      runId,
-      status,
-      JSON.stringify(stats),
-      error,
-    ])
+    await client.query(
+      `UPDATE import_runs SET status = $2, stats = $3, error = $4, finished_at = NOW() WHERE id = $1`,
+      [runId, status, JSON.stringify(stats), error],
+    )
     return { runId, status, exitCode, stats, error }
   }
 
@@ -82,9 +80,9 @@ export async function runImport(client: pg.ClientBase, ctx: ImportContext): Prom
     stats.curated = await step('curated photo spots (curated/photo-spots.json)', () => importCurated(client, ctx))
     const wikidata = await step('Wikidata popularity, labels, images', () => importWikidata(client, ctx))
     stats.wikidata = wikidata.stats
-    await step('derived fields (nearest station, Navigo zone, walk minutes)', async () => {
-      await client.query(await readFile(path.join(here, 'postprocess.sql'), 'utf8'))
-      return 'ok'
+    stats.derived = await step('derived fields (nearest station, Navigo zone, walk minutes)', async () => {
+      const res = await client.query(await readFile(path.join(here, 'postprocess.sql'), 'utf8'))
+      return { updated: res.rowCount ?? 0 }
     })
     stats.photo_categories = await step('photo spot selection (photoSpots.ts)', () => assignPhotoCategories(client))
     stats.covers = await step('cover photos from Wikimedia Commons', () => attachCovers(client, ctx, wikidata.info))

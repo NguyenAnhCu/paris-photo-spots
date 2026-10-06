@@ -30,13 +30,9 @@ async function upsertRegion(client: pg.ClientBase, code: string, name: string, t
 
 // Administrative boundaries are stable, so regions missing from a download are not soft-deleted.
 export async function importBoundaries(client: pg.ClientBase, ctx: ImportContext): Promise<SourceStats> {
-  const arrondissements = await fetchJsonCached<FeatureCollection<{ c_arinsee: number; l_ar: string; l_aroff: string }>>(
-    ctx,
-    'paris-arrondissements.geojson',
-    ARRONDISSEMENTS_URL,
-    undefined,
-    nonEmptyCollection('paris-arrondissements'),
-  )
+  const arrondissements = await fetchJsonCached<
+    FeatureCollection<{ c_arinsee: number; l_ar: string; l_aroff: string }>
+  >(ctx, 'paris-arrondissements.geojson', ARRONDISSEMENTS_URL, undefined, nonEmptyCollection('paris-arrondissements'))
   const departments = await fetchJsonCached<FeatureCollection<{ code: string; nom: string }>>(
     ctx,
     'france-departements.geojson',

@@ -1,8 +1,8 @@
 // UI state shared between the persistent map (MapLayout) and the routed panels (list, detail, photos, add).
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import type { LngLat } from '../lib/geo'
-import type { SpotCategory } from '../types/spot'
+import type { LngLat } from '@/lib/geo'
+import type { SpotCategory } from '@/types/spot'
 
 export type Placement = { position: LngLat | null; category: SpotCategory | null }
 

@@ -1,5 +1,5 @@
-import type { Locale } from '../i18n/translate'
-import type { SpotCategory, SpotCollection, SpotDetail } from '../types/spot'
+import type { Locale } from '@/i18n/translate'
+import type { SpotCategory, SpotCollection, SpotDetail } from '@/types/spot'
 import { api } from './client'
 
 export type NewSpot = { name: string; photoCategory: SpotCategory; lat: number; lng: number; tip?: string }

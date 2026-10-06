@@ -1,4 +1,4 @@
-import { config } from '../config'
+import { config } from '@/config'
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 

@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+package-lock.json
+backend/storage
+backend/db/import/.cache
+frontend/public/map-style.json
+*.sql

@@ -2,7 +2,7 @@
 // hovered/selected pins turn clay and grow 32 → 40px. Drawn as SVG images for a MapLibre symbol layer (hundreds of
 // DOM markers re-created on every state change is too slow).
 // Raw colours: MapLibre images cannot read CSS variables — keep in sync with tokens.css (--accent, --clay).
-import type { SpotCategory } from '../../types/spot'
+import type { SpotCategory } from '@/types/spot'
 
 export const PIN_COLOR = { normal: '#5980a6', active: '#c4825a', draft: '#c4825a', empty: '#98989b' } as const
 export const PIN_SIZE = { normal: 32, active: 40 } as const
@@ -13,8 +13,7 @@ export const CATEGORY_ICON_PATHS: Record<SpotCategory | 'add', string> = {
   landmark: '<path d="M3 21h18M5 21V9M19 21V9M3 9l9-6 9 6M9 21v-7h6v7"/>',
   street:
     '<path d="M12 13v8M12 3v3"/><path d="M18 6a2 2 0 0 1 1.39.56l2.3 2.22a1 1 0 0 1 0 1.44l-2.3 2.22A2 2 0 0 1 18 13H6a2 2 0 0 1-1.39-.56l-2.3-2.22a1 1 0 0 1 0-1.44l2.3-2.22A2 2 0 0 1 6 6z"/>',
-  skyline:
-    '<path d="M12 2v4M4.93 10.93l1.41 1.41M2 18h2M20 18h2M19.07 10.93l-1.41 1.41M22 22H2M16 18a4 4 0 0 0-8 0"/>',
+  skyline: '<path d="M12 2v4M4.93 10.93l1.41 1.41M2 18h2M20 18h2M19.07 10.93l-1.41 1.41M22 22H2M16 18a4 4 0 0 0-8 0"/>',
   bridge:
     '<path d="M2 8c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1M2 16c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>',
   park: '<circle cx="12" cy="9" r="6.5"/><path d="M12 15.5V22M8.5 22h7"/>',

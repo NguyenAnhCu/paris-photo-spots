@@ -27,9 +27,7 @@ export type WikidataInfo = {
 }
 
 function buildQuery(qids: string[]): string {
-  const labels = LANGS.map(
-    (l) => `OPTIONAL { ?item rdfs:label ?${l} FILTER(LANG(?${l}) = "${l}") }`,
-  ).join('\n  ')
+  const labels = LANGS.map((l) => `OPTIONAL { ?item rdfs:label ?${l} FILTER(LANG(?${l}) = "${l}") }`).join('\n  ')
   return `SELECT ?item ?sitelinks ?image ?coord ${LANGS.map((l) => `?${l}`).join(' ')} WHERE {
   VALUES ?item { ${qids.map((q) => `wd:${q}`).join(' ')} }
   ?item wikibase:sitelinks ?sitelinks .
@@ -59,7 +57,12 @@ export function parseSparql(bindings: Binding[]): Map<string, WikidataInfo> {
   for (const b of bindings) {
     const qid = b.item?.value.split('/').pop()
     if (!qid) continue
-    const info = out.get(qid) ?? { sitelinks: Number(b.sitelinks?.value ?? 0), imageFile: null, coord: null, labels: {} }
+    const info = out.get(qid) ?? {
+      sitelinks: Number(b.sitelinks?.value ?? 0),
+      imageFile: null,
+      coord: null,
+      labels: {},
+    }
     if (!info.imageFile && b.image?.value) info.imageFile = commonsFileName(b.image.value) || null
     if (!info.coord && b.coord?.value) info.coord = parseWktPoint(b.coord.value)
     for (const l of LANGS) {
@@ -134,7 +137,14 @@ export async function importWikidata(
          AND (p.popularity IS DISTINCT FROM n.popularity
               OR (CASE WHEN n.keep_vi THEN p.name_i18n - 'vi' ELSE p.name_i18n END)
                  IS DISTINCT FROM (CASE WHEN n.keep_vi THEN n.labels - 'vi' ELSE n.labels END))`,
-      [qid, value.sitelinks, JSON.stringify(value.labels), value.coord?.[0] ?? null, value.coord?.[1] ?? null, MAX_QID_DISTANCE_M],
+      [
+        qid,
+        value.sitelinks,
+        JSON.stringify(value.labels),
+        value.coord?.[0] ?? null,
+        value.coord?.[1] ?? null,
+        MAX_QID_DISTANCE_M,
+      ],
     )
     if ((rowCount ?? 0) > 0) stats.updated += rowCount ?? 0
     else stats.unchanged++

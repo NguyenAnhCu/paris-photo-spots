@@ -34,9 +34,13 @@ export const errorHandler: ErrorRequestHandler = (rawErr, _req, res, _next) => {
     return
   }
   if (err instanceof AppError) {
-    res.status(err.status).json({ error: { code: err.code, message: err.message, status: err.status, details: err.details } })
+    res
+      .status(err.status)
+      .json({ error: { code: err.code, message: err.message, status: err.status, details: err.details } })
     return
   }
   logger.error({ err }, 'Unhandled error')
-  res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error', status: 500, details: [] } })
+  res
+    .status(500)
+    .json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error', status: 500, details: [] } })
 }

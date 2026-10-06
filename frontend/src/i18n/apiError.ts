@@ -1,4 +1,4 @@
-import { ApiError } from '../api/client'
+import { ApiError } from '@/api/client'
 import { hasMessage, type Translate } from './translate'
 
 // Map backend error codes to localized text; unknown codes fall back to a generic message.

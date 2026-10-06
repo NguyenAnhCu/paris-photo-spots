@@ -1,9 +1,0 @@
-{
-  // Type-checks the tsx-run scripts in db/ (seeds, imports), which the build config (rootDir: src) excludes.
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "rootDir": ".",
-    "noEmit": true
-  },
-  "include": ["src", "db"]
-}

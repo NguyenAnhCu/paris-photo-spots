@@ -15,7 +15,11 @@
   white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s, background 0.15s, opacity 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s,
+    background 0.15s,
+    opacity 0.15s;
 }
 .pill:disabled {
   opacity: 0.45;
@@ -55,6 +59,12 @@
 .pill--active {
   background: var(--btn-primary-bg);
   color: var(--white);
+}
+
+@media (pointer: coarse) {
+  .pill {
+    min-height: var(--tap-min);
+  }
 }
 
 /* ── Round icon button (40 desktop, 44 touch) ── */
@@ -177,8 +187,7 @@
   line-height: 1.2;
 }
 .stat__label {
-  font-size: 12px;
-  opacity: 0.75;
+  font-size: 12px; /* full colour: opacity 0.75 gave 4.45:1, under the AA 4.5:1 for 12px text */
 }
 /* Three tiles share 440px: values wrap to two lines instead of being cut ("Bình mi…"). */
 .stat__value {

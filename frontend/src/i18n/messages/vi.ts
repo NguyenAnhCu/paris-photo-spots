@@ -103,6 +103,7 @@ export const vi = {
   'add.locationDesktopHint': 'Chạm vào bản đồ để đặt vị trí',
   'add.locationChangeHint': 'chạm bản đồ để đổi',
   'add.locationNone': 'Chưa chọn vị trí',
+  'add.locationTapHint': 'Chạm vào bản đồ để đặt ghim',
   'add.locationPick': 'Chọn trên bản đồ',
   'add.locationDone': 'Xong',
   'add.photoStep': '2. Chọn ảnh',
@@ -137,6 +138,7 @@ export const vi = {
   'errors.UNSUPPORTED_IMAGE': 'Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP.',
   'errors.FILE_TOO_LARGE': 'Ảnh quá lớn (tối đa 10 MB).',
   'errors.INVALID_IMAGE': 'Tệp không phải ảnh hợp lệ.',
+  'errors.IMAGE_TOO_LARGE': 'Ảnh có kích thước quá lớn (tối đa khoảng 100 megapixel).',
   'errors.UPLOAD_MISSING_FILE': 'Hãy chọn một ảnh.',
   'errors.RATE_LIMITED': 'Bạn gửi quá nhanh, vui lòng thử lại sau ít phút.',
 } as const
