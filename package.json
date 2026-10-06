@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "backend",
-    "frontend"
+    "frontend",
+    "e2e"
   ],
   "engines": {
     "node": ">=22"
@@ -17,8 +18,9 @@
     "lint": "npm run lint --workspaces",
     "test": "npm run test:unit -w backend && npm run test -w frontend",
     "test:integration": "npm run test:integration -w backend",
-    "format": "prettier --write backend frontend package.json README.md docker-compose.yml .prettierrc.json .github",
-    "format:check": "prettier --check backend frontend package.json README.md docker-compose.yml .prettierrc.json .github"
+    "format": "prettier --write backend frontend e2e package.json README.md docker-compose.yml .prettierrc.json .github",
+    "format:check": "prettier --check backend frontend e2e package.json README.md docker-compose.yml .prettierrc.json .github",
+    "test:e2e": "npm test -w e2e"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^5.0.3",

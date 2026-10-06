@@ -1,0 +1,15 @@
+{
+  "version": 8,
+  "name": "e2e",
+  "glyphs": "/e2e/glyphs/{fontstack}/{range}.pbf",
+  "sources": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#f7f8f8"
+      }
+    }
+  ]
+}

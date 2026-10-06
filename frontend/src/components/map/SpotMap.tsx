@@ -63,7 +63,14 @@ const clusterCountLayer: LayerProps = {
   type: 'symbol',
   source: SOURCE_ID,
   filter: ['has', 'point_count'],
-  layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-font': ['Noto Sans Bold'], 'text-size': 13 },
+  layout: {
+    'text-field': ['get', 'point_count_abbreviated'],
+    'text-font': ['Noto Sans Bold'],
+    'text-size': 13,
+    // A pin right next to the cluster would otherwise win the label collision and leave an empty circle.
+    'text-allow-overlap': true,
+    'text-ignore-placement': true,
+  },
   paint: { 'text-color': '#ffffff' },
 }
 
@@ -142,6 +149,8 @@ export function SpotMap({
   const handleLoad = useCallback(() => {
     const map = mapRef.current?.getMap()
     if (!map) return
+    // E2E builds only: tests wait for rendered pins and click them by coordinates (dropped from other builds).
+    if (import.meta.env.MODE === 'e2e') Object.assign(window, { __map: map })
     // MapLibre opens the compact attribution on load; closed it is an (i) button instead of a line across the pins.
     map.getContainer().querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
     if (pendingFocus.current) {
