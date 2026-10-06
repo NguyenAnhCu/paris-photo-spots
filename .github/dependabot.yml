@@ -1,5 +1,7 @@
 # Weekly dependency updates, opened as PRs into develop (same flow as any change: CI must pass before merging).
-# Minor and patch updates are grouped into one PR per kind; each major update gets its own PR.
+# Packages that only work at matching versions move together, majors included (first matching group wins, so these
+# come first): @vitest/coverage-v8 5 needs vitest 5, @vitejs/plugin-react 6 needs vite 8 — alone, each one broke CI.
+# Other minor and patch updates are grouped into one PR per kind; any other major update gets its own PR.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -12,6 +14,10 @@ updates:
       timezone: Europe/Paris
     open-pull-requests-limit: 5
     groups:
+      vitest:
+        patterns: ['vitest', '@vitest/*']
+      vite:
+        patterns: ['vite', '@vitejs/*']
       production-dependencies:
         dependency-type: production
         update-types: [minor, patch]
