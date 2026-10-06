@@ -10,12 +10,24 @@ useFreshDatabase()
 
 test.skip(process.platform !== 'linux', 'baselines are made on CI (Linux)')
 
-// Every font face used and every image decoded, so the shot does not catch a half-loaded page.
+// Every font face used and every image on screen loaded, so the shot does not catch a half-loaded page. Lazy images
+// below the fold never load without scrolling: only the visible ones are awaited.
 async function settled(page: Page) {
   await page.evaluate(async () => {
     await document.fonts.ready
+    const onScreen = [...document.images].filter((img) => {
+      const r = img.getBoundingClientRect()
+      return r.width > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth
+    })
     await Promise.all(
-      [...document.images].map((img) => (img.complete ? null : new Promise((r) => img.addEventListener('load', r)))),
+      onScreen.map((img) =>
+        img.complete
+          ? null
+          : new Promise((done) => {
+              img.addEventListener('load', done)
+              img.addEventListener('error', done)
+            }),
+      ),
     )
   })
 }
