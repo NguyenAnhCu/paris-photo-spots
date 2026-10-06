@@ -21,7 +21,7 @@
     "format:check": "prettier --check backend frontend package.json README.md docker-compose.yml .prettierrc.json .github"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.0.3",
     "prettier": "^3.9.9"
   }
 }
