@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { spotRepository, type SpotRow } from './spot.repository.js'
-import { resizeCommonsThumb, spotService } from './spot.service.js'
+import { displayName, resizeCommonsThumb, spotService } from './spot.service.js'
 
 vi.mock('./spot.repository.js', () => ({
   spotRepository: { listAll: vi.fn(), byId: vi.fn(), insertUserSpotUnlessDuplicate: vi.fn() },
@@ -53,6 +53,30 @@ describe('spotService.list', () => {
   it('falls back to the original name when there is no label in that language', async () => {
     repo.listAll.mockResolvedValue([row({ name_i18n: { vi: 'Tháp Eiffel' } })])
     expect((await spotService.list('fr')).features[0]?.properties.name).toBe('Tour Eiffel')
+  })
+  // Regression: Wikidata labels are written for running text ("place du Tertre", "đại lộ Champs-Élysées"), and 292
+  // of them started in lower case — the app shows names as titles.
+  it('capitalizes the first letter of the shown name, whatever the language', async () => {
+    repo.listAll.mockResolvedValue([
+      row({ name_i18n: { fr: 'place du Tertre', en: 'pont Notre-Dame', vi: 'đại lộ Champs-Élysées' } }),
+    ])
+    const names = await Promise.all(
+      (['fr', 'en', 'vi'] as const).map(async (lang) => (await spotService.list(lang)).features[0]?.properties.name),
+    )
+    expect(names).toEqual(['Place du Tertre', 'Pont Notre-Dame', 'Đại lộ Champs-Élysées'])
+  })
+
+  it('leaves names that already start with a capital, a digit or a symbol unchanged', async () => {
+    repo.listAll.mockResolvedValue([row({ name_i18n: { en: '104 Rue d’Aubervilliers' } })])
+    expect((await spotService.list('en')).features[0]?.properties.name).toBe('104 Rue d’Aubervilliers')
+  })
+})
+
+describe('displayName', () => {
+  it('upper-cases only the first character (other letters keep their case)', () => {
+    expect(displayName('arc de triomphe du Carrousel')).toBe('Arc de triomphe du Carrousel')
+    expect(displayName('éGLISE')).toBe('ÉGLISE')
+    expect(displayName('')).toBe('')
   })
 })
 

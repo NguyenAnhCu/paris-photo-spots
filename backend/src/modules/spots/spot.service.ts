@@ -10,7 +10,15 @@ export function resizeCommonsThumb(url: string | null, width: number): string | 
   return url.replace(/\/\d+px-([^/]+)$/, `/${width}px-$1`)
 }
 
-const localizedName = (row: Pick<SpotRow, 'name' | 'name_i18n'>, lang: SpotLang) => row.name_i18n?.[lang] || row.name
+// Wikidata labels follow running-text casing ("place du Tertre", "đại lộ Champs-Élysées"); the app shows names as titles.
+// Only the first character changes: the rest of a name keeps its own casing.
+export function displayName(name: string, lang?: SpotLang): string {
+  const [first = '', ...rest] = Array.from(name)
+  return first.toLocaleUpperCase(lang) + rest.join('')
+}
+
+const localizedName = (row: Pick<SpotRow, 'name' | 'name_i18n'>, lang: SpotLang) =>
+  displayName(row.name_i18n?.[lang] || row.name, lang)
 
 function toFeature(row: SpotRow, lang: SpotLang) {
   return {
