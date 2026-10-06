@@ -1,6 +1,6 @@
 // /dev — component gallery to compare against the prototype at 375px and 1440px.
 // Developer-only page: its fixed sample values are data, not UI copy.
-import { Camera, Clock, Cloud, Images, Plus, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Camera, Clock, Cloud, Images, Plus, SlidersHorizontal, X } from 'lucide-react'
 import { useState } from 'react'
 import { CategoryChip, IconButton, PillButton, StatTile, Tag } from '@/components/ui'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
@@ -48,9 +48,6 @@ export function DevPage() {
       <section>
         <h2>Tag</h2>
         <div className="dev__row">
-          <Tag tone="crowd-1">{t('crowd.quiet')}</Tag>
-          <Tag tone="crowd-2">{t('crowd.moderate')}</Tag>
-          <Tag tone="crowd-3">{t('crowd.busy')}</Tag>
           <Tag tone="neutral">{t('bestTime.sunset')}</Tag>
           <Tag>{t('list.count', { count: 262 })}</Tag>
           <Tag tone="mono">35mm</Tag>
@@ -60,7 +57,6 @@ export function DevPage() {
       <section>
         <h2>StatTile</h2>
         <div className="dev__tiles">
-          <StatTile icon={Users} label={t('detail.crowd')} value={t('crowd.busy')} />
           <StatTile icon={Clock} label={t('detail.bestTime')} value={t('bestTime.sunrise')} />
           <StatTile
             icon={Cloud}
@@ -69,7 +65,6 @@ export function DevPage() {
           />
         </div>
         <div className="dev__tiles">
-          <StatTile stacked icon={Users} label={t('detail.crowd')} value={t('crowd.busy')} />
           <StatTile stacked icon={Clock} label={t('detail.bestTime')} value={t('bestTime.sunrise')} />
           <StatTile
             stacked
