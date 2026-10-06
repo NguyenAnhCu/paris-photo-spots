@@ -1,6 +1,7 @@
 // Simulated hourly crowd profile (no real data source yet — the UI must label it "ước tính" / estimate).
-// Formula from the design prototype: Gaussian around 14h (σ 4.2),
-// scaled by crowdLevel/3, extra peak at 19h for sunset spots, small deterministic per-spot jitter.
+// Formula from the design spec: Gaussian around 14h (σ 4.2), scaled by crowdLevel/3, extra peak at 19h for sunset
+// spots, small deterministic per-spot jitter. The thresholds (quiet < 0.4 ≤ moderate < 0.72 ≤ busy) apply to that
+// scaled value: it must not be divided by the spot's own peak, or every spot reads "busy" at its busiest hour.
 import type { CrowdLevel } from '@/types/spot'
 
 export const FIRST_HOUR = 6
@@ -13,7 +14,9 @@ const BASE_SHARE = 0.22
 const JITTER_MAX = 0.09
 
 export type CrowdLabel = 'quiet' | 'moderate' | 'busy'
-export type HourlyCrowd = { hour: number; level: number } // level normalized 0..1 (1 = busiest hour of this spot)
+// level: estimate on the shared 0..1 scale (capped at 1), used for the label and the bar height.
+// value: the same estimate before the cap, so the busiest hour stays the true peak when several hours reach 1.
+export type HourlyCrowd = { hour: number; level: number; value: number }
 
 // Stable small integer from the spot id so every visitor sees the same "estimate".
 export function seedFromId(id: string): number {
@@ -33,8 +36,7 @@ export function crowdProfile(crowdLevel: CrowdLevel, sunsetPeak: boolean, seed: 
     if (sunsetPeak) value += SUNSET_WEIGHT * Math.exp(-((hour - SUNSET_HOUR) ** 2) / 4)
     raw.push({ hour, value })
   }
-  const max = Math.max(...raw.map((r) => r.value))
-  return raw.map((r) => ({ hour: r.hour, level: max > 0 ? r.value / max : 0 }))
+  return raw.map((r) => ({ hour: r.hour, level: Math.min(1, r.value), value: r.value }))
 }
 
 export function clampToProfileHour(hour: number): number {
@@ -49,7 +51,7 @@ export function crowdLabelAt(profile: HourlyCrowd[], hour: number): CrowdLabel {
 }
 
 export function busiestHour(profile: HourlyCrowd[]): number {
-  return profile.reduce((best, p) => (p.level > best.level ? p : best), { hour: PEAK_HOUR, level: -1 }).hour
+  return profile.reduce((best, p) => (p.value > best.value ? p : best), { hour: PEAK_HOUR, level: -1, value: -1 }).hour
 }
 
 export const CROWD_LEVEL_LABEL: Record<CrowdLevel, CrowdLabel> = { 1: 'quiet', 2: 'moderate', 3: 'busy' }
