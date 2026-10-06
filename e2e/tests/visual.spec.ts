@@ -35,9 +35,11 @@ async function settled(page: Page) {
 async function shoot(page: Page, name: string, map = true) {
   if (map) await waitForIdle(page)
   await settled(page)
-  // threshold: per-pixel colour tolerance. Playwright's default (0.2) let a changed button colour (#416180 → #4a6a80)
-  // pass; 0.05 catches it. maxDiffPixelRatio absorbs the few anti-aliased pixels WebGL may vary between runs.
-  await expect(page).toHaveScreenshot(`${name}.png`, { threshold: 0.05, maxDiffPixelRatio: 0.01 })
+  // Tolerances were tuned by changing the primary button colour (#416180 → #4a6a80), which must fail:
+  // - threshold: per-pixel colour difference; Playwright's default (0.2) treats those two colours as equal.
+  // - maxDiffPixels: a whole button is ~0.5 % of the page, so a ratio of 1 % let it pass; 200 px still absorbs the few
+  //   anti-aliased pixels WebGL may vary between runs.
+  await expect(page).toHaveScreenshot(`${name}.png`, { threshold: 0.05, maxDiffPixels: 200 })
 }
 
 // Desktop shows the map next to the panels; on the phone the list/detail pages come without it.
