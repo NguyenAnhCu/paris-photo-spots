@@ -27,6 +27,14 @@ npm run dev:frontend                   # http://localhost:5173
 
 Kiểm tra: `npm run lint`, `npm run typecheck`, `npm test` (unit), `npm run test:integration` (cần Docker), `npm run build -w frontend`.
 
+E2E (Playwright, bản build production, DB riêng `pmv_e2e` trên PostGIS của `npm run db:up`, không gọi mạng ngoài):
+
+```bash
+npm exec -w e2e -- playwright install chromium   # một lần
+npm run test:e2e                                 # ~1 phút; báo cáo: e2e/playwright-report
+npm run test:ui -w e2e                           # chạy tương tác
+```
+
 ## Lưu ý
 
 - Chưa có đăng nhập: các API ghi (tạo spot, tải ảnh) chỉ được giới hạn tần suất theo IP. Không nên mở công khai

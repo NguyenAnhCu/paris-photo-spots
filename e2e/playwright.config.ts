@@ -12,6 +12,8 @@ export default defineConfig({
   forbidOnly: CI,
   // No retries: a flaky test must be fixed, not hidden.
   retries: 0,
+  // When something breaks everything (e.g. the map worker), stop early instead of timing out every test (~8 min).
+  maxFailures: CI ? 10 : 0,
   timeout: 30_000,
   expect: { timeout: 10_000 },
   reporter: CI ? [['github'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
