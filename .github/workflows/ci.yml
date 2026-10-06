@@ -138,6 +138,7 @@ jobs:
           path: |
             e2e/playwright-report
             e2e/test-results
+            e2e/tests/*-snapshots
           retention-days: 7
 
   # One coverage comment per PR, updated on each push. Information only: not a required check, never blocks merging.

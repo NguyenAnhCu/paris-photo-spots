@@ -1,8 +1,10 @@
 // The `test` every spec imports. On top of Playwright's it:
 // - answers every request that would leave the machine (map style, glyphs, weather, Commons photos, Google Fonts) from
-//   local fixtures, and fails the test on any other external request;
+//   local fixtures, and fails the test on any other external request. The design fonts come from @fontsource (same
+//   OFL fonts as Google Fonts), so text measures and screenshots match the real app;
 // - fails the test on an uncaught page error or a console error, unless the test lists that message as expected.
 import { readFile } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { test as base, expect, type Route } from '@playwright/test'
 import { resetAndSeed } from './db.js'
@@ -13,6 +15,25 @@ import { IMAGES } from './images.js'
 export const WEATHER = { current: { temperature_2m: 21.4, weather_code: 2 } }
 
 const fixture = (...parts: string[]) => readFile(path.join(E2E_DIR, 'fixtures', ...parts))
+
+// The weights index.html asks Google Fonts for.
+const FONTS = [
+  { pkg: 'cormorant-garamond', weights: [500, 600, 700] },
+  { pkg: 'barlow', weights: [400, 500, 700] },
+]
+const require = createRequire(import.meta.url)
+const fontDir = (pkg: string) => path.join(path.dirname(require.resolve(`@fontsource/${pkg}/400.css`)), 'files')
+let fontCss: Promise<string> | undefined
+// One stylesheet with every @font-face, file URLs pointing at a fake gstatic path answered below.
+const googleFontsCss = () =>
+  (fontCss ??= Promise.all(
+    FONTS.flatMap(({ pkg, weights }) =>
+      weights.map(async (w) => {
+        const css = await readFile(require.resolve(`@fontsource/${pkg}/${w}.css`), 'utf8')
+        return css.replaceAll('url(./files/', `url(https://fonts.gstatic.com/e2e/${pkg}/`)
+      }),
+    ),
+  ).then((parts) => parts.join('\n')))
 
 async function answerLocally(route: Route): Promise<boolean> {
   const url = new URL(route.request().url())
@@ -36,9 +57,16 @@ async function answerLocally(route: Route): Promise<boolean> {
       await route.fulfill({ contentType: 'image/jpeg', body: await readFile(IMAGES.cover) })
       return true
     case 'fonts.googleapis.com':
-      // Fallback fonts are fine for behaviour tests.
-      await route.fulfill({ contentType: 'text/css', body: '' })
+      await route.fulfill({ contentType: 'text/css', body: await googleFontsCss() })
       return true
+    case 'fonts.gstatic.com': {
+      const [, , pkg = '', file = ''] = url.pathname.split('/')
+      const body = FONTS.some((f) => f.pkg === pkg)
+        ? await readFile(path.join(fontDir(pkg), file)).catch(() => null)
+        : null
+      await (body ? route.fulfill({ contentType: 'font/woff2', body }) : route.fulfill({ status: 404, body: '' }))
+      return true
+    }
   }
   return false
 }
