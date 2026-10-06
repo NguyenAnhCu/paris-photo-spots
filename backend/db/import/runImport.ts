@@ -80,9 +80,9 @@ export async function runImport(client: pg.ClientBase, ctx: ImportContext): Prom
     stats.curated = await step('curated photo spots (curated/photo-spots.json)', () => importCurated(client, ctx))
     const wikidata = await step('Wikidata popularity, labels, images', () => importWikidata(client, ctx))
     stats.wikidata = wikidata.stats
-    await step('derived fields (nearest station, Navigo zone, walk minutes)', async () => {
-      await client.query(await readFile(path.join(here, 'postprocess.sql'), 'utf8'))
-      return 'ok'
+    stats.derived = await step('derived fields (nearest station, Navigo zone, walk minutes)', async () => {
+      const res = await client.query(await readFile(path.join(here, 'postprocess.sql'), 'utf8'))
+      return { updated: res.rowCount ?? 0 }
     })
     stats.photo_categories = await step('photo spot selection (photoSpots.ts)', () => assignPhotoCategories(client))
     stats.covers = await step('cover photos from Wikimedia Commons', () => attachCovers(client, ctx, wikidata.info))
