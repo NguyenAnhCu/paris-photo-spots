@@ -22,6 +22,11 @@ export default tseslint.config(
     },
   },
   {
+    // Test helpers render providers next to non-component exports; fast refresh never loads them.
+    files: ['src/test/**', 'src/**/*.test.{ts,tsx}'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
     files: ['scripts/**/*.mjs'],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node },
