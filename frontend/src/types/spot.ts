@@ -14,7 +14,8 @@ export const SPOT_CATEGORIES = [
 ] as const
 export type SpotCategory = (typeof SPOT_CATEGORIES)[number]
 
-export type CrowdLevel = 1 | 2 | 3 // 1 Vắng · 2 Vừa · 3 Đông (estimate, set by the team)
+// Still sent by the API but not shown: crowd information is hidden until real crowd data exists (2026-10-06).
+export type CrowdLevel = 1 | 2 | 3 // 1 quiet · 2 moderate · 3 busy (set by the team, not measured)
 
 export const BEST_TIMES = ['sunrise', 'early_morning', 'midday', 'late_afternoon', 'sunset'] as const
 export type BestTime = (typeof BEST_TIMES)[number]

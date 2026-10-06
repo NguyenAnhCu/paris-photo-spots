@@ -40,10 +40,6 @@ export const vi = {
   'category.wedding': 'Cưới / Pre-wedding',
   'category.suburb': 'Ngoại ô',
 
-  'crowd.quiet': 'Vắng',
-  'crowd.moderate': 'Vừa',
-  'crowd.busy': 'Đông',
-
   'bestTime.sunrise': 'Bình minh',
   'bestTime.early_morning': 'Sáng sớm',
   'bestTime.midday': 'Trưa',
@@ -54,14 +50,9 @@ export const vi = {
   'card.meta': '{category} · Giờ đẹp: {time}',
   'card.open': 'Mở {name}',
 
-  'detail.crowd': 'Đông người',
-  'detail.estimate': 'ước tính',
   'detail.bestTime': 'Giờ đẹp',
   'detail.weather': 'Thời tiết',
   'detail.weatherError': 'Không có dữ liệu',
-  'detail.crowdChart': 'Mức độ đông người theo giờ',
-  'detail.crowdNow': 'hiện tại, {hour}h',
-  'detail.crowdChartSummary': 'Ước tính: đông nhất khoảng {peak}h; lúc này {label}.',
   'detail.noTip': 'Chưa có ghi chú.',
   'detail.photoCredit': 'Ảnh: {attribution}',
   'detail.viewPhotos': 'Xem {count} ảnh cộng đồng',

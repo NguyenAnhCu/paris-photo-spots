@@ -8,6 +8,8 @@ import type { SpotSummary } from '@/types/spot'
 import { SpotCard } from './SpotCard'
 
 const t = createTranslator('vi')
+// The words the removed crowd labels used (vi), checked literally: their message keys no longer exist.
+const CROWD_WORDS = ['Vắng', 'Vừa', 'Đông']
 
 function renderCard(s: SpotSummary, variant: 'overlay' | 'stacked', handlers = {}) {
   const props = { onOpen: vi.fn(), onHover: vi.fn(), ...handlers }
@@ -34,10 +36,16 @@ describe('SpotCard', () => {
     )
   })
 
-  it('grid card: crowd tag always, best-time tag only when known', () => {
-    renderCard(spot({ crowdLevel: 3, bestTime: null }), 'stacked')
-    expect(screen.getByText(t('crowd.busy'))).toBeInTheDocument()
+  it('grid card: best-time tag only when known', () => {
+    renderCard(spot({ bestTime: null }), 'stacked')
     expect(screen.queryByText(t('bestTime.unknown'))).not.toBeInTheDocument()
+  })
+
+  // Crowd levels are hidden until real crowd data exists (decision 2026-10-06).
+  it.each([1, 2, 3] as const)('shows no crowd label on either card (level %i)', (crowdLevel) => {
+    renderCard(spot({ crowdLevel, bestTime: 'sunset' }), 'overlay')
+    renderCard(spot({ crowdLevel, bestTime: 'sunset' }), 'stacked')
+    for (const label of CROWD_WORDS) expect(screen.queryByText(label)).not.toBeInTheDocument()
   })
 
   it('opens on click and reports hover/focus so the matching pin lights up', async () => {

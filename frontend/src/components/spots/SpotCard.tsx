@@ -1,6 +1,5 @@
 import { useI18n } from '@/i18n/useI18n'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '@/i18n/keys'
-import { CROWD_LEVEL_LABEL } from '@/lib/crowd'
+import { bestTimeKey, categoryLabelKey } from '@/i18n/keys'
 import type { SpotSummary } from '@/types/spot'
 import { Photo, Tag } from '@/components/ui'
 import './SpotCard.css'
@@ -17,7 +16,6 @@ export function SpotCard({ spot, variant, active, onOpen, onHover }: SpotCardPro
   const { t } = useI18n()
   const category = t(categoryLabelKey(spot.photoCategory))
   const best = t(bestTimeKey(spot.bestTime))
-  const crowd = t(crowdLabelKey(CROWD_LEVEL_LABEL[spot.crowdLevel]))
   const hover = onHover ? { onMouseEnter: () => onHover(spot.id), onMouseLeave: () => onHover(null) } : {}
 
   if (variant === 'overlay') {
@@ -32,7 +30,6 @@ export function SpotCard({ spot, variant, active, onOpen, onHover }: SpotCardPro
         {...hover}
       >
         <Photo src={spot.coverThumbUrl} alt="" className="spot-card__photo" />
-        <span className={`spot-card__crowd spot-card__crowd--${spot.crowdLevel}`}>{crowd}</span>
         <span className="spot-card__caption">
           <span className="spot-card__name">{spot.name}</span>
           {/* Most imported spots have no curated best time: show the category alone rather than "Giờ đẹp: Chưa rõ". */}
@@ -52,10 +49,11 @@ export function SpotCard({ spot, variant, active, onOpen, onHover }: SpotCardPro
       </span>
       <span className="spot-card__body">
         <span className="spot-card__name">{spot.name}</span>
-        <span className="spot-card__tags">
-          <Tag tone={`crowd-${spot.crowdLevel}`}>{crowd}</Tag>
-          {spot.bestTime && <Tag tone="neutral">{best}</Tag>}
-        </span>
+        {spot.bestTime && (
+          <span className="spot-card__tags">
+            <Tag tone="neutral">{best}</Tag>
+          </span>
+        )}
       </span>
     </button>
   )

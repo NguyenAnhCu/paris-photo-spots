@@ -1,16 +1,14 @@
-import { ArrowLeft, Camera, Clock, Cloud, Images, Users, X } from 'lucide-react'
+import { ArrowLeft, Camera, Clock, Cloud, Images, X } from 'lucide-react'
 import { useEffect } from 'react'
 import { mediaUrl } from '@/api/client'
 import { useSpot, useSpotPhotos, useWeather } from '@/hooks/useSpots'
 import { useI18n } from '@/i18n/useI18n'
 import { translateApiError } from '@/i18n/apiError'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey, weatherKey } from '@/i18n/keys'
+import { bestTimeKey, categoryLabelKey, weatherKey } from '@/i18n/keys'
 import { formatCoords } from '@/lib/geo'
 import { useMapUi, useSpotNav } from '@/pages/mapUi'
 import type { SpotDetail as Spot } from '@/types/spot'
 import { IconButton, Photo, PillButton, StatTile, Tag } from '@/components/ui'
-import { useCrowdNow } from '@/hooks/useCrowdNow'
-import { CrowdChart } from './CrowdChart'
 import { ExifPills } from './ExifPills'
 import { CommunityPhotos } from './PhotoGallery'
 import { StateMessage } from './StateMessage'
@@ -37,8 +35,6 @@ function WeatherValue({ lat, lng }: { lat: number; lng: number }) {
 function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) {
   const { t } = useI18n()
   const nav = useSpotNav()
-  const sunset = spot.photoCategory === 'skyline' || spot.bestTime === 'sunset'
-  const crowd = useCrowdNow(spot.id, spot.crowdLevel, sunset)
   const photos = useSpotPhotos(spot.id)
   const latest = photos.data?.pages[0]?.items ?? []
   const withExif = latest.find((p) => p.focal || p.aperture || p.shutter || p.iso)
@@ -46,13 +42,8 @@ function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) 
 
   return (
     <>
+      {/* No crowd tile or hourly chart: hidden until real crowd data exists (the old values were simulated). */}
       <div className="detail__stats">
-        <StatTile
-          stacked={stacked}
-          icon={Users}
-          label={`${t('detail.crowd')} · ${t('detail.estimate')}`}
-          value={t(crowdLabelKey(crowd.label))}
-        />
         <StatTile stacked={stacked} icon={Clock} label={t('detail.bestTime')} value={t(bestTimeKey(spot.bestTime))} />
         <StatTile
           stacked={stacked}
@@ -61,7 +52,6 @@ function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) 
           value={<WeatherValue lat={spot.lat} lng={spot.lng} />}
         />
       </div>
-      <CrowdChart {...crowd} />
       <p className="detail__tip">{spot.tip || t('detail.noTip')}</p>
       {withExif && <ExifPills photo={withExif} />}
       <div className="detail__community">

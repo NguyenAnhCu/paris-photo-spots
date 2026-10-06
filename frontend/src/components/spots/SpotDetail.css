@@ -82,60 +82,16 @@ a.photo-credit:hover {
   text-decoration: underline;
 }
 
-/* Stats + chart + tip + EXIF + community (shared by panel and page) */
+/* Stats + tip + EXIF + community (shared by panel and page) */
 .detail__stats {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 .detail__tip {
   margin: 0;
   font-size: 15px;
   line-height: 1.65;
-}
-.crowd-chart {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 16px 10px;
-  border-radius: var(--r-chart);
-  background: var(--chart-bg);
-}
-.crowd-chart__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 12px;
-}
-.crowd-chart__title {
-  font-weight: 500;
-}
-.crowd-chart__estimate,
-.crowd-chart__now {
-  font-weight: 400;
-  opacity: 0.75;
-}
-.crowd-chart__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 56px;
-}
-.crowd-chart__bar {
-  flex: 1;
-  border-radius: 5px 5px 1px 1px;
-  background: var(--accent-300);
-}
-.crowd-chart__bar[data-now='true'] {
-  background: var(--clay);
-}
-.crowd-chart__axis {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  opacity: 0.65;
 }
 .exif-pills {
   display: flex;

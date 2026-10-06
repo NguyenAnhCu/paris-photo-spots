@@ -134,16 +134,6 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.tag--crowd-1 {
-  background: var(--crowd-1);
-}
-.tag--crowd-2 {
-  background: var(--crowd-2);
-}
-.tag--crowd-3 {
-  background: var(--crowd-3);
-  color: var(--clay-ink);
-}
 .tag--neutral {
   background: var(--ink-soft);
   color: var(--tonal-fg);

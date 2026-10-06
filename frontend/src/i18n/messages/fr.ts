@@ -40,10 +40,6 @@ export const fr: Messages = {
   'category.wedding': 'Mariage / Pre-wedding',
   'category.suburb': 'Hors de Paris',
 
-  'crowd.quiet': 'Calme',
-  'crowd.moderate': 'Modéré',
-  'crowd.busy': 'Bondé',
-
   'bestTime.sunrise': 'Lever du soleil',
   'bestTime.early_morning': 'Tôt le matin',
   'bestTime.midday': 'Midi',
@@ -54,14 +50,9 @@ export const fr: Messages = {
   'card.meta': '{category} · Meilleur moment : {time}',
   'card.open': 'Ouvrir {name}',
 
-  'detail.crowd': 'Affluence',
-  'detail.estimate': 'estimation',
   'detail.bestTime': 'Meilleur moment',
   'detail.weather': 'Météo',
   'detail.weatherError': 'Pas de données',
-  'detail.crowdChart': 'Affluence par heure',
-  'detail.crowdNow': 'maintenant, {hour} h',
-  'detail.crowdChartSummary': 'Estimation : affluence maximale vers {peak} h ; en ce moment {label}.',
   'detail.noTip': 'Pas encore de note.',
   'detail.photoCredit': 'Photo : {attribution}',
   'detail.viewPhotos': 'Voir {count} photos de la communauté',
