@@ -17,7 +17,9 @@
     "lint": "eslint .",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "user:role": "tsx --env-file=.env db/admin/userRole.ts",
+    "cleanup": "tsx --env-file=.env db/admin/cleanup.ts"
   },
   "dependencies": {
     "better-auth": "^1.7.7",
