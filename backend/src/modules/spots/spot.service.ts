@@ -1,6 +1,8 @@
 import { env } from '../../config/env.js'
 import { AppError } from '../../lib/errors.js'
 import { isInBBox, SUPPORTED_SPOT_BBOX } from '../../lib/geo.js'
+import type { AuthUser } from '../auth/auth.service.js'
+import { meService } from '../me/me.service.js'
 import { spotRepository, type SpotRow } from './spot.repository.js'
 import type { CreateSpotBody, SpotLang } from './spot.schemas.js'
 
@@ -72,11 +74,13 @@ export const spotService = {
     if (!(await spotRepository.byId(id))) throw new AppError('SPOT_NOT_FOUND', 404, 'Spot not found')
   },
 
-  async create(body: CreateSpotBody) {
+  async create(actor: AuthUser, body: CreateSpotBody) {
     if (!isInBBox([body.lng, body.lat], SUPPORTED_SPOT_BBOX)) {
       throw new AppError('OUT_OF_AREA', 400, 'Location is outside the supported area')
     }
+    await meService.assertCanPost(actor, 'spot')
     const result = await spotRepository.insertUserSpotUnlessDuplicate({
+      createdBy: actor.id,
       name: body.name,
       photoCategory: body.photo_category,
       lng: body.lng,

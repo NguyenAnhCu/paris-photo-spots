@@ -1,6 +1,7 @@
 // Community photos on an existing spot (desktop): add a photo, then browse them in the viewer.
 import { query, spotId } from '../support/db.js'
 import { uploadPhoto } from '../support/api.js'
+import { acceptTerms, closeRecoveryCode } from '../support/identity.js'
 import { IMAGES, WITH_EXIF } from '../support/images.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
@@ -16,16 +17,20 @@ test('photos - "Thêm ảnh" on a spot uploads the photo with its EXIF and opens
   await expect(submit).toBeDisabled()
   await page.getByLabel('2. Chọn ảnh').setInputFiles(IMAGES.withExif)
   await expect(page.getByText('Đã đọc tự động từ ảnh')).toBeVisible()
-  await page.getByLabel('Tên của bạn (tuỳ chọn)').fill('Hà')
+  await expect(submit).toBeDisabled() // terms first
+  await acceptTerms(page)
   await submit.click()
 
   await expect(page).toHaveURL(`/spots/${pontNeuf}/photos`)
+  await closeRecoveryCode(page)
   await expect(page.getByRole('button', { name: 'Xem ảnh 1' })).toBeVisible()
-  const rows = await query<{ author_name: string; focal: string; camera: string }>(
-    'SELECT author_name, focal, camera FROM photos WHERE poi_id = $1',
+  const rows = await query<{ author: string; focal: string; camera: string }>(
+    'SELECT u.display_name AS author, ph.focal, ph.camera FROM photos ph JOIN users u ON u.id = ph.user_id WHERE ph.poi_id = $1',
     [pontNeuf],
   )
-  expect(rows).toEqual([{ author_name: 'Hà', focal: WITH_EXIF.focal, camera: WITH_EXIF.camera }])
+  expect(rows).toEqual([
+    { author: expect.stringMatching(/^Lữ khách \d{4}$/), focal: WITH_EXIF.focal, camera: WITH_EXIF.camera },
+  ])
 })
 
 test('photos - viewer: next/previous, EXIF of the shown photo, Escape back to the grid then out of the spot', async ({
@@ -33,8 +38,8 @@ test('photos - viewer: next/previous, EXIF of the shown photo, Escape back to th
 }) => {
   const louvre = await spotId('louvre')
   // Newest first in the gallery: uploaded in reverse so "Xem ảnh 1" is Bảo.
-  await uploadPhoto(louvre, IMAGES.noExif, { author_name: 'Châu' })
-  await uploadPhoto(louvre, IMAGES.noExif, { author_name: 'Bảo', focal: '85mm', aperture: 'f/2' })
+  await uploadPhoto(louvre, IMAGES.noExif, { author: 'Châu' })
+  await uploadPhoto(louvre, IMAGES.noExif, { author: 'Bảo', focal: '85mm', aperture: 'f/2' })
   await page.goto(`/spots/${louvre}/photos`)
 
   await page.getByRole('button', { name: 'Xem ảnh 1' }).click()

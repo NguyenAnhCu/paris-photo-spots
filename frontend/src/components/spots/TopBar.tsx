@@ -7,6 +7,7 @@ import { useI18n } from '@/i18n/useI18n'
 import { categoryLabelKey } from '@/i18n/keys'
 import { useSpotNav } from '@/pages/mapUi'
 import { SPOT_CATEGORIES } from '@/types/spot'
+import { AccountMenu } from '@/components/account/AccountMenu'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
 import { CategoryChip, PillButton } from '@/components/ui'
 import './TopBar.css'
@@ -132,6 +133,7 @@ export function TopBar() {
       </div>
       <div className="topbar__actions">
         <LanguageSwitcher />
+        <AccountMenu />
         <PillButton variant="primary" size="lg" icon={CirclePlus} onClick={nav.toAdd}>
           {t('add.button')}
         </PillButton>

@@ -9,7 +9,8 @@ const testEnv = {
   NODE_ENV: 'test',
   LOG_LEVEL: 'silent',
   DATABASE_URL: 'postgres://unit:unit@127.0.0.1:1/unit_tests_do_not_connect',
-  JWT_SECRET: 'test-only-secret-with-at-least-32-characters',
+  BETTER_AUTH_SECRET: 'test-only-secret-with-at-least-32-characters',
+  PUBLIC_ORIGIN: 'http://localhost:5173',
   STORAGE_DIR: path.join(os.tmpdir(), `pmv-test-storage-${process.pid}`),
 }
 

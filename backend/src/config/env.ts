@@ -9,8 +9,20 @@ const EnvSchema = z.object({
   DB_CONNECT_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(5_000),
   DB_STATEMENT_TIMEOUT_MS: z.coerce.number().int().nonnegative().default(10_000),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
-  JWT_SECRET: z.string().min(32),
-  JWT_EXPIRES_IN: z.string().default('1h'),
+  // Accounts & sessions (Better Auth). The secret signs session cookies: keep it out of the repo, rotate = everyone signs in again.
+  BETTER_AUTH_SECRET: z.string().min(32),
+  // Origin the browser uses (web app and /api behind one host): base of auth URLs and the only trusted Origin for writes.
+  PUBLIC_ORIGIN: z.string().url().default('http://localhost:5173'),
+  SESSION_EXPIRES_DAYS: z.coerce.number().int().positive().default(365),
+  SESSION_UPDATE_AGE_HOURS: z.coerce.number().int().positive().default(24),
+  // Cloudflare Turnstile on anonymous sign-in and recovery-code sign-in; empty = off (dev, tests).
+  TURNSTILE_SECRET_KEY: z.string().default(''),
+  // Version of the terms a participant must have accepted before posting (draft until the legal phase, P7).
+  TERMS_VERSION: z.string().min(1).default('draft-1'),
+  // Posts per rolling 24 h. Linked accounts get QUOTA_LINKED_MULTIPLIER times more; reviewers/admins have none.
+  QUOTA_ANON_PHOTOS_PER_DAY: z.coerce.number().int().positive().default(10),
+  QUOTA_ANON_SPOTS_PER_DAY: z.coerce.number().int().positive().default(3),
+  QUOTA_LINKED_MULTIPLIER: z.coerce.number().int().positive().default(3),
   MAX_RADIUS_M: z.coerce.number().int().positive().default(5000),
   MAX_RESULTS: z.coerce.number().int().positive().default(500),
   MAX_POLYGON_VERTICES: z.coerce.number().int().positive().default(1000),
@@ -42,6 +54,9 @@ const EnvSchema = z.object({
   SHUTDOWN_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
   WRITE_RATE_LIMIT: z.coerce.number().int().positive().default(20),
   WRITE_RATE_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
+  // New identities (anonymous sign-in) and recovery-code attempts per IP per minute: slows down identity farming and
+  // code guessing (a code is 80 bits, guessing must still be slow).
+  AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
 })
 
 export type Env = z.infer<typeof EnvSchema>

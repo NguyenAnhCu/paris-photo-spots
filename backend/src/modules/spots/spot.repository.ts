@@ -46,6 +46,7 @@ export const spotRepository = {
   // are computed right away (same rule as the import's postprocess.sql) so the spot is ready for the future routing
   // feature. source_ref = id keeps the (source, source_ref) unique index meaningful.
   async insertUserSpotUnlessDuplicate(input: {
+    createdBy: string
     name: string
     photoCategory: PhotoCategory
     lng: number
@@ -73,10 +74,18 @@ export const spotRepository = {
 
       // Two statements: a data-modifying CTE cannot UPDATE the row its own INSERT created (same snapshot).
       const { rows } = await client.query<{ id: string }>(
-        `INSERT INTO pois (source, name, category, photo_category, tip, name_i18n, crowd_level, geom)
-         VALUES ('user', $1, 'user_spot', $2, $3, $4::jsonb, 2, ST_SetSRID(ST_MakePoint($5, $6), 4326))
+        `INSERT INTO pois (source, name, category, photo_category, tip, name_i18n, crowd_level, created_by, geom)
+         VALUES ('user', $1, 'user_spot', $2, $3, $4::jsonb, 2, $7, ST_SetSRID(ST_MakePoint($5, $6), 4326))
          RETURNING id`,
-        [input.name, input.photoCategory, input.tip, JSON.stringify(input.nameI18n), input.lng, input.lat],
+        [
+          input.name,
+          input.photoCategory,
+          input.tip,
+          JSON.stringify(input.nameI18n),
+          input.lng,
+          input.lat,
+          input.createdBy,
+        ],
       )
       const id = rows[0]?.id
       if (!id) throw new Error('Spot insert returned no id')

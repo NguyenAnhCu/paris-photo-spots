@@ -20,12 +20,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "better-auth": "^1.7.7",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "express-rate-limit": "^8.7.0",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0",
     "pg": "^8.16.0",
     "pino": "^9.7.0",
@@ -40,7 +40,6 @@
     "@types/compression": "^1.8.0",
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.2",
-    "@types/jsonwebtoken": "^9.0.9",
     "@types/multer": "^2.3.0",
     "@types/node": "^22.15.0",
     "@types/pg": "^8.15.0",

@@ -6,6 +6,7 @@ import { bestTimeKey, categoryLabelKey } from '@/i18n/keys'
 import { formatCoords } from '@/lib/geo'
 import { useMapUi, useSpotNav } from '@/pages/mapUi'
 import type { SpotSummary } from '@/types/spot'
+import { AccountMenu } from '@/components/account/AccountMenu'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher'
 import { Photo, PillButton } from '@/components/ui'
 import './MobileChrome.css'
@@ -28,6 +29,7 @@ export function MobileHeader() {
       </button>
       <div className="m-header__actions">
         <LanguageSwitcher />
+        <AccountMenu />
         <PillButton variant="primary" icon={CirclePlus} onClick={nav.toAdd} className="m-header__add">
           {t('add.button')}
         </PillButton>

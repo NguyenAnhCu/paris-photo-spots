@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, type RenderOptions } from '@testing-library/react'
 import { useState, type ReactElement, type ReactNode } from 'react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { AccountProvider } from '@/components/account/AccountProvider'
 import { I18nProvider } from '@/i18n/I18nProvider'
 import type { Locale } from '@/i18n/translate'
 import { MapUiContext, type MapUi, type Placement } from '@/pages/mapUi'
@@ -78,10 +79,12 @@ export function renderWithApp(ui: ReactElement, opts: Options = {}) {
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={[route]}>
           <MapUiState initial={mapUi}>
-            <Routes>
-              <Route path={path ?? '*'} element={element} />
-              {path && <Route path="*" element={<LocationProbe />} />}
-            </Routes>
+            <AccountProvider>
+              <Routes>
+                <Route path={path ?? '*'} element={element} />
+                {path && <Route path="*" element={<LocationProbe />} />}
+              </Routes>
+            </AccountProvider>
           </MapUiState>
         </MemoryRouter>
       </QueryClientProvider>
@@ -131,3 +134,67 @@ export function fakeFetch(routes: Record<string, Handler>) {
 
 export const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+
+// A fake identity backend (GET /api/v1/me, anonymous sign-in, terms, recovery code) to merge into fakeFetch routes.
+// `calls` records what the UI asked for, in order.
+export type IdentityState = { user: null | { name: string; termsAccepted: boolean; hasRecoveryCode: boolean } }
+export function identityServer(initial: IdentityState['user'] = null) {
+  // A copy: tests share their starting user objects, and the fake server mutates its state (rename, sign-out).
+  const state: IdentityState = { user: initial && { ...initial } }
+  const calls: string[] = []
+  const me = () =>
+    json(200, {
+      user: state.user && {
+        id: 'me-1',
+        name: state.user.name,
+        is_anonymous: true,
+        role: 'participant',
+        has_recovery_code: state.user.hasRecoveryCode,
+        terms_accepted: state.user.termsAccepted,
+        posting_suspended_until: null,
+      },
+      terms_version: 'draft-1',
+    })
+  const routes: Record<string, Handler> = {
+    'GET /api/v1/me': () => me(),
+    'POST /api/auth/sign-in/anonymous': (_url, init) => {
+      calls.push(`sign-in/anonymous lang=${new Headers(init?.headers).get('x-ui-lang')}`)
+      state.user = { name: 'Lữ khách 4821', termsAccepted: false, hasRecoveryCode: false }
+      return json(200, { token: 'x', user: { id: 'me-1' } })
+    },
+    'POST /api/v1/me/terms': (_url, init) => {
+      calls.push(`terms ${String((JSON.parse(String(init?.body)) as { version: string }).version)}`)
+      if (state.user) state.user.termsAccepted = true
+      return me()
+    },
+    'POST /api/v1/me/update': (_url, init) => {
+      const name = String((JSON.parse(String(init?.body)) as { name: string }).name).trim()
+      calls.push(`rename ${name}`)
+      if (name.toLowerCase() === 'admin') {
+        return json(400, { error: { code: 'INVALID_NAME', message: 'This name cannot be used', status: 400 } })
+      }
+      if (state.user) state.user.name = name
+      return me()
+    },
+    'POST /api/auth/sign-out': () => {
+      calls.push('sign-out')
+      state.user = null
+      return json(200, { success: true })
+    },
+    'POST /api/auth/recovery-code/sign-in': (_url, init) => {
+      const code = String((JSON.parse(String(init?.body)) as { code: string }).code)
+      calls.push(`recovery-code/sign-in ${code}`)
+      if (code.replace(/[\s-]/g, '').toUpperCase() !== 'AB12CD34EF56GH78') {
+        return json(401, { code: 'INVALID_RECOVERY_CODE', message: 'Invalid recovery code' })
+      }
+      state.user = { name: 'Lữ khách 4821', termsAccepted: true, hasRecoveryCode: true }
+      return json(200, { ok: true })
+    },
+    'POST /api/auth/recovery-code/create': () => {
+      calls.push('recovery-code/create')
+      if (state.user) state.user.hasRecoveryCode = true
+      return json(200, { code: 'AB12-CD34-EF56-GH78' })
+    },
+  }
+  return { routes, calls, state }
+}

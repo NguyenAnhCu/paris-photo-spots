@@ -183,3 +183,13 @@
     min-height: var(--tap-min);
   }
 }
+
+/* Narrow header: the account button keeps its icon (and accessible name), the visible name goes. */
+.m-header .account-menu__name {
+  display: none;
+}
+.m-header .account-menu__button {
+  padding: 0;
+  background: var(--surface);
+  box-shadow: none;
+}

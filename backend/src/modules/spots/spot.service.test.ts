@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { AppError } from '../../lib/errors.js'
+import type { AuthUser } from '../auth/auth.service.js'
+import { meService } from '../me/me.service.js'
 import { spotRepository, type SpotRow } from './spot.repository.js'
 import { displayName, resizeCommonsThumb, spotService } from './spot.service.js'
 
 vi.mock('./spot.repository.js', () => ({
   spotRepository: { listAll: vi.fn(), byId: vi.fn(), insertUserSpotUnlessDuplicate: vi.fn() },
 }))
+vi.mock('../me/me.service.js', () => ({ meService: { assertCanPost: vi.fn() } }))
 const repo = vi.mocked(spotRepository)
+const ACTOR: AuthUser = { id: 'user-1', role: 'participant', isAnonymous: true, name: 'Lữ khách 1234' }
 
 const COVER = 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Tour_Eiffel.jpg/1280px-Tour_Eiffel.jpg'
 const row = (over: Partial<SpotRow> = {}): SpotRow => ({
@@ -124,9 +129,10 @@ describe('spotService.create', () => {
   it('creates the spot with the typed name as the name in the UI language, then returns its detail', async () => {
     repo.insertUserSpotUnlessDuplicate.mockResolvedValue({ id: 'new-id' })
     repo.byId.mockResolvedValue(row({ id: 'new-id', name: 'Rue Crémieux', source: 'user' }))
-    const created = await spotService.create(body)
+    const created = await spotService.create(ACTOR, body)
     expect(repo.insertUserSpotUnlessDuplicate).toHaveBeenCalledWith(
       expect.objectContaining({
+        createdBy: 'user-1',
         name: 'Rue Crémieux',
         photoCategory: 'street',
         lng: 2.3708,
@@ -141,7 +147,7 @@ describe('spotService.create', () => {
 
   it('answers 409 SPOT_DUPLICATE with the existing id when a spot is already within 30 m', async () => {
     repo.insertUserSpotUnlessDuplicate.mockResolvedValue({ duplicate: { id: 'existing', name: 'Rue Crémieux' } })
-    await expect(spotService.create(body)).rejects.toMatchObject({
+    await expect(spotService.create(ACTOR, body)).rejects.toMatchObject({
       code: 'SPOT_DUPLICATE',
       status: 409,
       details: [{ id: 'existing' }],
@@ -150,10 +156,17 @@ describe('spotService.create', () => {
   })
 
   it('refuses locations outside the supported area without touching the database', async () => {
-    await expect(spotService.create({ ...body, lat: 45.764, lng: 4.8357 })).rejects.toMatchObject({
+    await expect(spotService.create(ACTOR, { ...body, lat: 45.764, lng: 4.8357 })).rejects.toMatchObject({
       code: 'OUT_OF_AREA',
       status: 400,
     })
+    expect(repo.insertUserSpotUnlessDuplicate).not.toHaveBeenCalled()
+  })
+
+  it('checks the author may post (terms, suspension, quota) before writing anything', async () => {
+    vi.mocked(meService.assertCanPost).mockRejectedValue(new AppError('QUOTA_EXCEEDED', 429, 'limit'))
+    await expect(spotService.create(ACTOR, body)).rejects.toMatchObject({ code: 'QUOTA_EXCEEDED' })
+    expect(meService.assertCanPost).toHaveBeenCalledWith(ACTOR, 'spot')
     expect(repo.insertUserSpotUnlessDuplicate).not.toHaveBeenCalled()
   })
 })

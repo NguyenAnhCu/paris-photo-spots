@@ -7,6 +7,7 @@ export type PhotoRow = {
   thumb_name: string
   width: number
   height: number
+  // Shown name: the uploader's current name; photos posted before accounts keep the name typed then.
   author_name: string | null
   focal: string | null
   aperture: string | null
@@ -16,21 +17,27 @@ export type PhotoRow = {
   created_at: string
 }
 
-const COLUMNS = `id, poi_id, file_name, thumb_name, width, height, author_name, focal, aperture, shutter, iso, camera, created_at`
+const COLUMNS = `ph.id, ph.poi_id, ph.file_name, ph.thumb_name, ph.width, ph.height,
+  COALESCE(u.display_name, ph.author_name) AS author_name, ph.focal, ph.aperture, ph.shutter, ph.iso, ph.camera, ph.created_at`
+const FROM = `photos ph LEFT JOIN users u ON u.id = ph.user_id AND u.deleted_at IS NULL`
+
+type PhotoInsert = Omit<PhotoRow, 'id' | 'created_at' | 'author_name'> & { user_id: string }
 
 export const photoRepository = {
-  async insert(input: Omit<PhotoRow, 'id' | 'created_at'>): Promise<PhotoRow> {
+  async insert(input: PhotoInsert): Promise<PhotoRow> {
     const { rows } = await pool.query<PhotoRow>(
-      `INSERT INTO photos (poi_id, file_name, thumb_name, width, height, author_name, focal, aperture, shutter, iso, camera)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-       RETURNING ${COLUMNS}`,
+      `WITH ph AS (
+         INSERT INTO photos (poi_id, file_name, thumb_name, width, height, user_id, focal, aperture, shutter, iso, camera)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING *)
+       SELECT ${COLUMNS} FROM ph LEFT JOIN users u ON u.id = ph.user_id`,
       [
         input.poi_id,
         input.file_name,
         input.thumb_name,
         input.width,
         input.height,
-        input.author_name,
+        input.user_id,
         input.focal,
         input.aperture,
         input.shutter,
@@ -46,8 +53,8 @@ export const photoRepository = {
   async listBySpot(poiId: string, offset: number, limit: number): Promise<{ items: PhotoRow[]; total: number }> {
     const { rows } = await pool.query<PhotoRow & { total: string }>(
       `SELECT ${COLUMNS}, count(*) OVER () AS total
-       FROM photos WHERE poi_id = $1 AND deleted_at IS NULL
-       ORDER BY created_at DESC, id
+       FROM ${FROM} WHERE ph.poi_id = $1 AND ph.deleted_at IS NULL
+       ORDER BY ph.created_at DESC, ph.id
        OFFSET $2 LIMIT $3`,
       [poiId, offset, limit],
     )

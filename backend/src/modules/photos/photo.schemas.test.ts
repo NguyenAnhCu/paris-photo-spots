@@ -7,7 +7,6 @@ describe('UploadPhotoFields', () => {
   it('accepts the EXIF summary produced by the browser reader', () => {
     const parsed = UploadPhotoFields.parse({
       spot_id: SPOT,
-      author_name: 'Minh',
       focal: '35mm',
       aperture: 'f/1.8',
       shutter: '1/250s',
@@ -21,16 +20,20 @@ describe('UploadPhotoFields', () => {
     expect(UploadPhotoFields.safeParse({ spot_id: SPOT, shutter: '2.5s' }).success).toBe(true)
   })
 
-  // Regression: '' used to pass for author_name/camera (their pattern matches the empty string) and was stored as ''.
+  // Regression: '' used to pass for camera (its pattern matches the empty string) and was stored as ''.
   it('treats empty and whitespace-only form fields as missing', () => {
-    const parsed = UploadPhotoFields.parse({ spot_id: SPOT, focal: '', author_name: '', camera: '   ' })
+    const parsed = UploadPhotoFields.parse({ spot_id: SPOT, focal: '', camera: '   ' })
     expect(parsed.focal).toBeUndefined()
-    expect(parsed.author_name).toBeUndefined()
     expect(parsed.camera).toBeUndefined()
   })
 
   it('trims surrounding spaces', () => {
-    expect(UploadPhotoFields.parse({ spot_id: SPOT, author_name: '  Minh ' }).author_name).toBe('Minh')
+    expect(UploadPhotoFields.parse({ spot_id: SPOT, camera: '  Sony ' }).camera).toBe('Sony')
+  })
+
+  // The author is the signed-in uploader now; a typed name must not be able to impersonate someone.
+  it('ignores an author_name field', () => {
+    expect(UploadPhotoFields.parse({ spot_id: SPOT, author_name: 'Admin' })).not.toHaveProperty('author_name')
   })
 
   it.each([
@@ -43,7 +46,6 @@ describe('UploadPhotoFields', () => {
   })
 
   it('rejects markup in free-text fields', () => {
-    expect(UploadPhotoFields.safeParse({ spot_id: SPOT, author_name: '<script>x</script>' }).success).toBe(false)
     expect(UploadPhotoFields.safeParse({ spot_id: SPOT, camera: '<img src=x>' }).success).toBe(false)
   })
 

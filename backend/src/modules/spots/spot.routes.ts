@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { writeRateLimit } from '../../middleware/rateLimit.js'
+import { currentUser, requirePermission } from '../auth/session.js'
 import { CreateSpotBody, ListSpotsQuery, SpotItemQuery } from './spot.schemas.js'
 import { spotService } from './spot.service.js'
 
@@ -17,6 +18,6 @@ spotRouter.get('/item', async (req, res) => {
   res.json(await spotService.byId(id, lang))
 })
 
-spotRouter.post('/', writeRateLimit, async (req, res) => {
-  res.status(201).json(await spotService.create(CreateSpotBody.parse(req.body)))
+spotRouter.post('/', writeRateLimit, requirePermission('post'), async (req, res) => {
+  res.status(201).json(await spotService.create(currentUser(req), CreateSpotBody.parse(req.body)))
 })
