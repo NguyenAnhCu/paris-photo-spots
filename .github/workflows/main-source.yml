@@ -1,0 +1,28 @@
+name: Main source branch
+
+# main only takes pull requests from develop (release flow: feature/* → develop → main). GitHub branch protection has
+# no setting for the source branch, so this check is required on main and fails for any other head branch.
+on:
+  pull_request:
+    branches: [main]
+    # edited: the base of an open pull request can be switched to main.
+    types: [opened, reopened, synchronize, edited]
+
+permissions: {}
+
+jobs:
+  from-develop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Pull requests into main must come from develop
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ] || [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::main only accepts pull requests from develop of this repository (this one: $HEAD_REPO:$HEAD_REF). Merge into develop first."
+            exit 1
+          fi
+          echo "Source branch is develop."

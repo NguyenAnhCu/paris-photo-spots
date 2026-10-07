@@ -75,6 +75,7 @@ describe('MiniSpotCard', () => {
     renderWithApp(<MiniSpotCard spot={spot({ bestTime: null })} onOpen={onOpen} />)
     const card = screen.getByRole('button', { name: t('card.open', { name: 'Pont Alexandre III' }) })
     expect(card).not.toHaveTextContent(t('bestTime.unknown'))
+    expect(card).not.toHaveTextContent('Vừa') // crowd levels hidden until real data exists
     await user.click(card)
     expect(onOpen).toHaveBeenCalledOnce()
   })

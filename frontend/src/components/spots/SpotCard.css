@@ -36,22 +36,6 @@
   transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
 }
-.spot-card__crowd {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  padding: 3px 11px;
-  border-radius: var(--r-pill);
-  font-size: 12px;
-  font-weight: 500;
-  background: var(--panel-bg);
-  color: var(--tonal-fg);
-  box-shadow: var(--shadow-chip);
-}
-.spot-card__crowd--3 {
-  background: var(--clay-chip);
-  color: var(--clay-ink);
-}
 .spot-card__caption {
   position: absolute;
   left: 0;
@@ -83,6 +67,11 @@
 
 /* ── Tablet/mobile stacked card: 4/3 photo then text ── */
 .spot-card--stacked {
+  /* A <button> centres its content vertically: when a grid row stretches a shorter card (no best-time tag, one-line
+     name), the photo would drop below the top edge. Lay the card out as a column pinned to the top instead. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   border-color: var(--divider);
   border-radius: var(--r-card);
   transition:

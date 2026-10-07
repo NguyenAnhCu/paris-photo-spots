@@ -2,8 +2,7 @@
 import { ArrowRight, CirclePlus, List, Map as MapIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useI18n } from '@/i18n/useI18n'
-import { bestTimeKey, categoryLabelKey, crowdLabelKey } from '@/i18n/keys'
-import { CROWD_LEVEL_LABEL } from '@/lib/crowd'
+import { bestTimeKey, categoryLabelKey } from '@/i18n/keys'
 import { formatCoords } from '@/lib/geo'
 import { useMapUi, useSpotNav } from '@/pages/mapUi'
 import type { SpotSummary } from '@/types/spot'
@@ -73,10 +72,7 @@ export function MiniSpotCard({ spot, onOpen }: { spot: SpotSummary; onOpen: () =
       <span className="mini-card__text">
         <span className="mini-card__category">{t(categoryLabelKey(spot.photoCategory))}</span>
         <span className="mini-card__name">{spot.name}</span>
-        <span className="mini-card__meta">
-          {t(crowdLabelKey(CROWD_LEVEL_LABEL[spot.crowdLevel]))}
-          {spot.bestTime && ` · ${t(bestTimeKey(spot.bestTime))}`}
-        </span>
+        {spot.bestTime && <span className="mini-card__meta">{t(bestTimeKey(spot.bestTime))}</span>}
       </span>
       <ArrowRight size={20} strokeWidth={2} aria-hidden="true" className="mini-card__arrow" />
     </button>

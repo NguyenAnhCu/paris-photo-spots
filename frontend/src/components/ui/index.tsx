@@ -63,7 +63,7 @@ export function CategoryChip({ category, selected, onSelect }: CategoryChipProps
   )
 }
 
-type TagTone = 'tonal' | 'neutral' | 'paper' | 'mono' | 'crowd-1' | 'crowd-2' | 'crowd-3'
+type TagTone = 'tonal' | 'neutral' | 'paper' | 'mono'
 
 export function Tag({
   tone = 'tonal',
