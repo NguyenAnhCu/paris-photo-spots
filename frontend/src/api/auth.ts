@@ -13,7 +13,8 @@ export type Me = {
 }
 export type MeResponse = { user: Me | null; termsVersion: string }
 
-// Better Auth routes live outside /api/v1 and answer errors as { code, message }.
+// Better Auth routes live outside /api/v1 and answer errors as { code, message }; the per-IP limit in front of them
+// answers like the rest of the API ({ error: { code } }).
 async function authPost<T>(path: string, body: unknown = {}, headers: Record<string, string> = {}): Promise<T> {
   const res = await fetch(`/api/auth${path}`, {
     method: 'POST',
@@ -22,8 +23,12 @@ async function authPost<T>(path: string, body: unknown = {}, headers: Record<str
   })
   const data: unknown = await res.json().catch(() => null)
   if (!res.ok) {
-    const err = data as { code?: string; message?: string } | null
-    throw new ApiError(err?.message ?? `HTTP ${res.status}`, res.status, err?.code)
+    const err = data as { code?: string; message?: string; error?: { code?: string; message?: string } } | null
+    throw new ApiError(
+      err?.message ?? err?.error?.message ?? `HTTP ${res.status}`,
+      res.status,
+      err?.code ?? err?.error?.code,
+    )
   }
   return keysToCamel<T>(data)
 }
@@ -42,4 +47,6 @@ export const authApi = {
   signInWithRecoveryCode: (code: string, captcha?: string) =>
     authPost<unknown>('/recovery-code/sign-in', { code }, captchaHeader(captcha)),
   signOut: () => authPost<unknown>('/sign-out'),
+  // Reviewers and admins (accounts made by an admin on the server, no sign-up).
+  signInStaff: (username: string, password: string) => authPost<unknown>('/sign-in/username', { username, password }),
 }

@@ -6,16 +6,15 @@ import { spotId } from '../support/db.js'
 import { acceptTerms, closeRecoveryCode } from '../support/identity.js'
 import { IMAGES } from '../support/images.js'
 import { clickMapAt, waitForPins } from '../support/map.js'
-import { addLinkedUser, staffPage } from '../support/staff.js'
+import { addStaff, staffPage } from '../support/staff.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
 useFreshDatabase()
 
-const REVIEWER = 'linh@review.example'
-
 async function reviewerPage(browser: Browser): Promise<Page> {
-  await addLinkedUser(REVIEWER, 'Linh', 'reviewer')
-  const page = await staffPage(browser, REVIEWER)
+  await addStaff('linh', 'reviewer', 'Linh')
+  const page = await staffPage(browser, 'linh')
+  await expect(page).toHaveURL('/review')
   await expect(page.getByRole('heading', { level: 1, name: 'Kiểm duyệt' })).toBeVisible()
   return page
 }

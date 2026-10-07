@@ -1,9 +1,9 @@
 // Better Auth instance (decision 2026-10-07, checked in a spike first). Tables are ours (snake_case,
 // no foreign keys, migration 1759795200000_auth-identity.sql) and mapped field by field below.
 import { betterAuth, type BetterAuthPlugin } from 'better-auth'
-import { APIError, createAuthEndpoint, sessionMiddleware } from 'better-auth/api'
+import { APIError, createAuthEndpoint, createAuthMiddleware, sessionMiddleware } from 'better-auth/api'
 import { setSessionCookie } from 'better-auth/cookies'
-import { anonymous, captcha, magicLink } from 'better-auth/plugins'
+import { anonymous, captcha, username } from 'better-auth/plugins'
 import { corsOrigins, env } from '../../config/env.js'
 import { pool } from '../../db/pool.js'
 import { logger } from '../../lib/logger.js'
@@ -62,7 +62,21 @@ export const auth = betterAuth({
     log: (level, message, ...args) => logger[level]({ args }, `[auth] ${message}`),
   },
   // Name changes go through /api/v1/me/update (validated); account deletion must also handle content (later phase).
-  disabledPaths: ['/update-user', '/delete-user', '/change-email', '/delete-anonymous-user'],
+  // Staff passwords are set and reset with the staff command-line tool only: no sign-up, no reset by email, no way to
+  // ask which usernames exist.
+  disabledPaths: [
+    '/update-user',
+    '/delete-user',
+    '/change-email',
+    '/delete-anonymous-user',
+    '/sign-up/email',
+    '/sign-in/email',
+    '/change-password',
+    '/set-password',
+    '/request-password-reset',
+    '/reset-password',
+    '/is-username-available',
+  ],
   session: {
     modelName: 'auth_sessions',
     expiresIn: env.SESSION_EXPIRES_DAYS * DAY_SECONDS,
@@ -106,6 +120,14 @@ export const auth = betterAuth({
     fields: at({ expiresAt: 'expires_at', createdAt: 'created_at', updatedAt: 'updated_at' }),
   },
   advanced: { database: { generateId: 'uuid' } },
+  hooks: {
+    // Staff sessions last a day and end with the browser, whatever the client asks: a staff account can hide or
+    // delete other people's content, so a forgotten session on a shared computer must not stay open for a year.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== '/sign-in/username') return
+      return { context: { body: { ...ctx.body, rememberMe: false } } }
+    }),
+  },
   // Off: per-IP limits are express-rate-limit in auth.routes.ts (Better Auth's limiter shared one bucket between all
   // clients when no forwarded-IP header was present).
   rateLimit: { enabled: false },
@@ -118,12 +140,8 @@ export const auth = betterAuth({
         authService.onAnonymousLinked(anonymousUser.user.id, newUser.user.id),
     }),
     recoveryCode(),
-    // Staff only for now: accounts are created by an admin (no self sign-up through a link).
-    magicLink({
-      disableSignUp: true,
-      expiresIn: 15 * 60,
-      sendMagicLink: ({ email, url }) => authService.deliverMagicLink(email, url),
-    }),
+    // Staff sign-in (/sign-in/username). Accounts come from `npm run staff -w backend` (db/admin/staff.ts).
+    username({ schema: { user: { fields: { displayUsername: 'display_username' } } } }),
     ...turnstile,
   ],
 })

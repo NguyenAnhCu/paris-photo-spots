@@ -6,6 +6,7 @@ export type AdminUser = {
   id: string
   name: string
   email: string | null
+  username: string | null
   role: Role
   isAnonymous: boolean
   postingSuspendedUntil: string | null

@@ -198,6 +198,25 @@ export function identityServer(initial: IdentityState['user'] = null) {
       state.user = { name: 'Lữ khách 4821', termsAccepted: true, hasRecoveryCode: true }
       return json(200, { ok: true })
     },
+    // Staff accounts: admin / admin (admin), linh / secret pass (reviewer); "flood" is rate limited.
+    'POST /api/auth/sign-in/username': (_url, init) => {
+      const { username, password } = JSON.parse(String(init?.body)) as { username: string; password: string }
+      calls.push(`sign-in/username ${username}`)
+      if (username === 'flood') {
+        return json(429, { error: { code: 'RATE_LIMITED', message: 'Too many requests', status: 429 } })
+      }
+      if (username.trim().length < 3) return json(422, { code: 'USERNAME_TOO_SHORT', message: 'Username is too short' })
+      const accounts: Record<string, [string, IdentityUser]> = {
+        admin: ['admin', { name: 'Admin', termsAccepted: false, hasRecoveryCode: false, role: 'admin' }],
+        linh: ['secret pass', { name: 'Linh', termsAccepted: false, hasRecoveryCode: false, role: 'reviewer' }],
+      }
+      const account = accounts[username.trim().toLowerCase()]
+      if (!account || account[0] !== password) {
+        return json(401, { code: 'INVALID_USERNAME_OR_PASSWORD', message: 'Invalid username or password' })
+      }
+      state.user = { ...account[1] }
+      return json(200, { token: 'x', user: { id: 'me-1' } })
+    },
     'POST /api/auth/recovery-code/create': () => {
       calls.push('recovery-code/create')
       if (state.user) state.user.hasRecoveryCode = true

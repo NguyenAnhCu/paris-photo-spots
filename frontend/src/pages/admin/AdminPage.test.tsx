@@ -10,6 +10,7 @@ const user = (over: Record<string, unknown>) => ({
   id: 'u1',
   name: 'Minh',
   email: 'minh@team.example',
+  username: null,
   role: 'participant',
   is_anonymous: false,
   posting_suspended_until: null,
@@ -31,7 +32,11 @@ function renderAdmin(role: 'reviewer' | 'admin', setRole?: () => Response) {
       ...identityServer({ name: 'Admin', termsAccepted: true, hasRecoveryCode: true, role }).routes,
       'POST /api/v1/admin/users/list': () =>
         json(200, {
-          items: [user({}), user({ id: 'u2', name: 'Lữ khách 1234', email: null, is_anonymous: true })],
+          items: [
+            user({}),
+            user({ id: 'u2', name: 'Lữ khách 1234', email: null, is_anonymous: true }),
+            user({ id: 'u3', name: 'Linh', email: null, username: 'linh', role: 'reviewer' }),
+          ],
           total: 2,
           offset: 0,
           limit: 50,
@@ -61,6 +66,7 @@ describe('AdminPage', () => {
     const minh = screen.getByRole('listitem', { name: 'Minh' })
     expect(minh).toHaveTextContent('minh@team.example')
     expect(minh).toHaveTextContent(t('admin.counts', { spots: 2, photos: 5 }))
+    expect(screen.getByRole('listitem', { name: 'Linh' })).toHaveTextContent('@linh')
   })
 
   it('changing a role calls the API; a refusal (last admin) is shown', async () => {

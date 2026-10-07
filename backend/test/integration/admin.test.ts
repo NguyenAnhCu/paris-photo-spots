@@ -5,8 +5,9 @@ import path from 'node:path'
 import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { cleanup } from '../../db/admin/cleanup.js'
-import { setUserRole } from '../../db/admin/userRole.js'
+import { createStaff, setStaffPassword, setStaffRole } from '../../db/admin/staff.js'
 import { createApp } from '../../src/app.js'
+import { env } from '../../src/config/env.js'
 import { pool } from '../../src/db/pool.js'
 import { STORAGE_ROOT } from '../../src/storage/photoStorage.js'
 import { pngImage } from '../fixtures/images.js'
@@ -14,6 +15,8 @@ import { meOf, setRole, signIn, type Agent } from './auth.js'
 import { resetDb, seedPlaces, type Seeded } from './db.js'
 
 const app = createApp()
+const PASSWORD = 'correct horse battery'
+const ORIGIN = env.PUBLIC_ORIGIN
 let seeded: Seeded
 let admin: Agent
 let adminId: string
@@ -43,9 +46,9 @@ describe('access', () => {
 })
 
 describe('users', () => {
-  it('lists staff first, finds by name or email, hides the placeholder email of anonymous identities', async () => {
+  it('lists staff first, finds by name or username, hides placeholder emails', async () => {
     await signIn(app) // anonymous participant
-    await setUserRole('minh@team.example', 'reviewer', 'Minh')
+    await createStaff({ username: 'minh.t', role: 'reviewer', password: PASSWORD, name: 'Minh' })
     const all = (await post(admin, '/users/list', {}).expect(200)).body
     expect(
       all.items
@@ -55,14 +58,14 @@ describe('users', () => {
     ).toEqual(['admin', 'reviewer'])
     const anonymous = all.items.find((u: { is_anonymous: boolean }) => u.is_anonymous)
     expect(anonymous.email).toBeNull()
-    const found = (await post(admin, '/users/list', { search: 'minh@team' }).expect(200)).body
+    const found = (await post(admin, '/users/list', { search: 'minh.t' }).expect(200)).body
     expect(found.items).toEqual([
-      expect.objectContaining({ name: 'Minh', email: 'minh@team.example', role: 'reviewer' }),
+      expect.objectContaining({ name: 'Minh', username: 'minh.t', email: null, role: 'reviewer' }),
     ])
   })
 
   it('makes a linked account a reviewer (logged); an anonymous identity cannot become staff', async () => {
-    const { id } = await setUserRole('an@team.example', 'participant', 'An')
+    const { id } = await createStaff({ username: 'an.le', role: 'participant', password: PASSWORD, name: 'An' })
     await post(admin, '/users/set-role', { user_id: id, role: 'reviewer' }).expect(200)
     const { rows } = await pool.query(
       "SELECT action, note FROM moderation_actions WHERE target_type = 'user' AND target_id = $1",
@@ -78,10 +81,10 @@ describe('users', () => {
   it('never removes the last admin (demote or delete), but a second admin makes it possible', async () => {
     const demote = await post(admin, '/users/set-role', { user_id: adminId, role: 'reviewer' }).expect(409)
     expect(demote.body.error.code).toBe('LAST_ADMIN')
-    const { id: second } = await setUserRole('ha@team.example', 'admin', 'Hà')
+    const { id: second } = await createStaff({ username: 'ha.vu', role: 'admin', password: PASSWORD, name: 'Hà' })
     await post(admin, '/users/delete', { user_id: second }).expect(200)
     await post(admin, '/users/set-role', { user_id: adminId, role: 'participant' }).expect(409)
-    await setUserRole('ha2@team.example', 'admin', 'Hà')
+    await createStaff({ username: 'ha.vu2', role: 'admin', password: PASSWORD, name: 'Hà' })
     await post(admin, '/users/set-role', { user_id: adminId, role: 'reviewer' }).expect(200)
   })
 
@@ -157,29 +160,71 @@ describe('moderation log and config', () => {
 })
 
 describe('command-line tools', () => {
-  it('user:role creates a staff account that can sign in by link, or updates an existing one', async () => {
-    const first = await setUserRole('  Linh@Team.example ', 'reviewer', 'Linh')
-    expect(first.created).toBe(true)
-    const again = await setUserRole('linh@team.example', 'admin')
-    expect(again).toEqual({ id: first.id, created: false })
-    const { rows } = await pool.query('SELECT email, role, is_anonymous, display_name FROM users WHERE id = $1', [
-      first.id,
-    ])
-    expect(rows[0]).toEqual({ email: 'linh@team.example', role: 'admin', is_anonymous: false, display_name: 'Linh' })
-    await expect(setUserRole('not-an-email', 'admin')).rejects.toThrow(/Not an email/)
+  it('staff create: username + hashed password, display name defaults to the username, placeholder email', async () => {
+    const { id, weak } = await createStaff({ username: ' Linh.N ', role: 'reviewer', password: PASSWORD })
+    expect(weak).toBe(false)
+    const { rows } = await pool.query(
+      'SELECT username, display_username, display_name, email, role, is_anonymous FROM users WHERE id = $1',
+      [id],
+    )
+    expect(rows[0]).toEqual({
+      username: 'linh.n',
+      display_username: 'linh.n',
+      display_name: 'linh.n',
+      email: 'linh.n@staff.placeholder.invalid',
+      role: 'reviewer',
+      is_anonymous: false,
+    })
+    await expect(createStaff({ username: 'LINH.N', role: 'admin', password: PASSWORD })).rejects.toThrow(
+      /already exists/,
+    )
+    await expect(createStaff({ username: 'li', role: 'admin', password: PASSWORD })).rejects.toThrow(
+      /Not a valid username/,
+    )
+    await expect(createStaff({ username: 'linh2', role: 'admin', password: PASSWORD, name: '<b>' })).rejects.toThrow(
+      /Not a valid name/,
+    )
+    const count = await pool.query('SELECT count(*)::int AS n FROM users')
+    expect(count.rows[0].n).toBe(2) // the admin from beforeEach + linh.n: nothing half-written
   })
 
-  it('user:role renames an existing account when a name is given, keeps it otherwise; rejects bad names', async () => {
-    const participant = await signIn(app)
-    const { id } = await meOf(participant)
-    await pool.query("UPDATE users SET email = 'nacu@example.com', is_anonymous = false WHERE id = $1", [id])
-    await setUserRole('nacu@example.com', 'admin', '  nacu ')
-    await setUserRole('NACU@example.com', 'admin')
-    expect(await meOf(participant)).toMatchObject({ id, name: 'nacu', role: 'admin', is_anonymous: false })
-    await expect(setUserRole('x@example.com', 'admin', 'a')).rejects.toThrow(/Not a valid name/)
-    await expect(setUserRole('x@example.com', 'admin', '<b>Boss</b>')).rejects.toThrow(/Not a valid name/)
-    const { rows } = await pool.query("SELECT 1 FROM users WHERE email = 'x@example.com'")
-    expect(rows).toEqual([])
+  it('production refuses a weak password; elsewhere it is allowed and reported as weak', async () => {
+    await expect(createStaff({ username: 'boss', role: 'admin', password: 'admin', production: true })).rejects.toThrow(
+      /at least 12/,
+    )
+    await expect(createStaff({ username: 'boss', role: 'admin', password: 'boss', production: true })).rejects.toThrow()
+    expect((await pool.query("SELECT 1 FROM users WHERE username = 'boss'")).rows).toEqual([])
+    const dev = await createStaff({ username: 'admin2', role: 'admin', password: 'admin', production: false })
+    expect(dev.weak).toBe(true)
+    await request(app)
+      .post('/api/auth/sign-in/username')
+      .set('Origin', ORIGIN)
+      .send({ username: 'admin2', password: 'admin' })
+      .expect(200)
+  })
+
+  it('staff password: the old one stops working and every session of that person is signed out', async () => {
+    await createStaff({ username: 'linh', role: 'reviewer', password: PASSWORD })
+    const agent = request.agent(app)
+    await agent
+      .post('/api/auth/sign-in/username')
+      .set('Origin', ORIGIN)
+      .send({ username: 'linh', password: PASSWORD })
+      .expect(200)
+    await setStaffPassword({ username: 'Linh', password: 'a brand new passphrase' })
+    expect((await agent.get('/api/v1/me').expect(200)).body.user).toBeNull()
+    const signInAs = (password: string) =>
+      request(app).post('/api/auth/sign-in/username').set('Origin', ORIGIN).send({ username: 'linh', password })
+    await signInAs(PASSWORD).expect(401)
+    await signInAs('a brand new passphrase').expect(200)
+    await expect(setStaffPassword({ username: 'nobody', password: PASSWORD })).rejects.toThrow(/No account/)
+  })
+
+  it('staff role: changes the role of an existing username', async () => {
+    const { id } = await createStaff({ username: 'linh', role: 'reviewer', password: PASSWORD })
+    await setStaffRole({ username: 'LINH', role: 'admin' })
+    expect((await pool.query('SELECT role FROM users WHERE id = $1', [id])).rows).toEqual([{ role: 'admin' }])
+    await expect(setStaffRole({ username: 'nobody', role: 'admin' })).rejects.toThrow(/No account/)
   })
 
   it('cleanup removes expired sessions, idle anonymous identities and files of photos rejected long ago', async () => {

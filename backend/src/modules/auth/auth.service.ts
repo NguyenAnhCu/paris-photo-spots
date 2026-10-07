@@ -1,8 +1,4 @@
 import { createHash, randomInt } from 'node:crypto'
-import { appendFile } from 'node:fs/promises'
-import { env } from '../../config/env.js'
-import { AppError } from '../../lib/errors.js'
-import { logger } from '../../lib/logger.js'
 import { isRole, type Role } from '../../lib/permissions.js'
 import { anonymousName } from '../../lib/userName.js'
 import { authRepository } from './auth.repository.js'
@@ -49,21 +45,6 @@ export const authService = {
   async userIdForRecoveryCode(code: string): Promise<string | null> {
     if (canonicalRecoveryCode(code).length !== CODE_LENGTH) return null
     return authRepository.userIdByRecoveryCodeHash(hashRecoveryCode(code))
-  },
-
-  // Sign-in links for staff. There is no email service yet (it comes with sign-in for participants): dev and E2E
-  // write each link to AUTH_MAGIC_LINK_LOG; production refuses rather than pretending a mail was sent.
-  async deliverMagicLink(email: string, url: string): Promise<void> {
-    // Accounts are looked up case-insensitively; send to (and log) the same normalised address.
-    email = email.trim().toLowerCase()
-    if (env.AUTH_MAGIC_LINK_LOG) {
-      await appendFile(env.AUTH_MAGIC_LINK_LOG, `${JSON.stringify({ email, url, at: new Date().toISOString() })}\n`)
-      return
-    }
-    if (env.NODE_ENV === 'production') {
-      throw new AppError('EMAIL_NOT_CONFIGURED', 503, 'Sign-in links cannot be sent yet')
-    }
-    logger.info({ email, url }, 'Magic link (dev: no email service)')
   },
 
   async onAnonymousLinked(anonymousUserId: string, accountUserId: string): Promise<void> {
