@@ -169,6 +169,19 @@ describe('command-line tools', () => {
     await expect(setUserRole('not-an-email', 'admin')).rejects.toThrow(/Not an email/)
   })
 
+  it('user:role renames an existing account when a name is given, keeps it otherwise; rejects bad names', async () => {
+    const participant = await signIn(app)
+    const { id } = await meOf(participant)
+    await pool.query("UPDATE users SET email = 'nacu@example.com', is_anonymous = false WHERE id = $1", [id])
+    await setUserRole('nacu@example.com', 'admin', '  nacu ')
+    await setUserRole('NACU@example.com', 'admin')
+    expect(await meOf(participant)).toMatchObject({ id, name: 'nacu', role: 'admin', is_anonymous: false })
+    await expect(setUserRole('x@example.com', 'admin', 'a')).rejects.toThrow(/Not a valid name/)
+    await expect(setUserRole('x@example.com', 'admin', '<b>Boss</b>')).rejects.toThrow(/Not a valid name/)
+    const { rows } = await pool.query("SELECT 1 FROM users WHERE email = 'x@example.com'")
+    expect(rows).toEqual([])
+  })
+
   it('cleanup removes expired sessions, idle anonymous identities and files of photos rejected long ago', async () => {
     const now = new Date()
     const old = new Date(now.getTime() - 40 * 24 * 3600 * 1000)
