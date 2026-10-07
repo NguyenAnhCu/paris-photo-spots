@@ -10,6 +10,7 @@ import { TermsPage } from './pages/TermsPage'
 
 // Staff only: a separate chunk participants never download.
 const ReviewPage = lazy(() => import('./pages/review/ReviewPage'))
+const AdminPage = lazy(() => import('./pages/admin/AdminPage'))
 
 // URL = screen (design views list / detail / photos / add); filters live in ?cat=&q= (see useSpotFilters).
 export function App() {
@@ -26,6 +27,14 @@ export function App() {
         <Route path="terms" element={<TermsPage />} />
         <Route path="me/posts" element={<MyPostsPage />} />
         <Route path="staff/sign-in" element={<StaffSignInPage />} />
+        <Route
+          path="admin"
+          element={
+            <Suspense fallback={null}>
+              <AdminPage />
+            </Suspense>
+          }
+        />
         <Route
           path="review"
           element={

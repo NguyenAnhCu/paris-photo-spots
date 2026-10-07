@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import { createTranslator } from '@/i18n/translate'
@@ -58,6 +58,22 @@ describe('AccountMenu', () => {
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
     ).toEqual([t('account.myPosts'), t('account.rename'), t('account.recoveryCode'), t('account.signOut')])
+  })
+
+  it('staff see Review; only admins also see Admin', async () => {
+    const items = async (role: 'reviewer' | 'admin') => {
+      const { user } = renderMenu({ name: 'Linh', termsAccepted: true, hasRecoveryCode: true, role })
+      await user.click(await screen.findByRole('button', { name: `${t('account.menu')}: Linh` }))
+      const names = within(screen.getByRole('menu'))
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent)
+      cleanup()
+      return names
+    }
+    const reviewer = await items('reviewer')
+    expect(reviewer).toContain(t('account.review'))
+    expect(reviewer).not.toContain(t('account.admin'))
+    expect(await items('admin')).toEqual(expect.arrayContaining([t('account.review'), t('account.admin')]))
   })
 
   it('sign out without a saved code warns first and offers to save the code', async () => {

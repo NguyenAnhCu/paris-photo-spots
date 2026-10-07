@@ -1,39 +1,21 @@
-// Moderation end to end, three browsers: a participant posts, a visitor looks, a reviewer decides. Staff sign in with a
-// one-time link the backend writes to a log file (no email service in tests).
-import { readFile } from 'node:fs/promises'
+// Moderation end to end, three browsers: a participant posts, a visitor looks, a reviewer decides.
 import { AxeBuilder } from '@axe-core/playwright'
 import type { Browser, Page } from '@playwright/test'
 import { uploadPhoto } from '../support/api.js'
-import { query, spotId } from '../support/db.js'
-import { MAGIC_LINK_LOG } from '../support/env.js'
+import { spotId } from '../support/db.js'
 import { acceptTerms, closeRecoveryCode } from '../support/identity.js'
 import { IMAGES } from '../support/images.js'
 import { clickMapAt, waitForPins } from '../support/map.js'
+import { addLinkedUser, staffPage } from '../support/staff.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
 useFreshDatabase()
 
 const REVIEWER = 'linh@review.example'
 
-async function staffPage(browser: Browser): Promise<Page> {
-  await query(
-    `INSERT INTO users (email, email_verified, display_name, role) VALUES ($1, true, 'Linh', 'reviewer')
-     ON CONFLICT DO NOTHING`,
-    [REVIEWER],
-  )
-  const page = await (await browser.newContext()).newPage()
-  await page.goto('/staff/sign-in')
-  await page.getByLabel('Email').fill(REVIEWER)
-  await page.getByRole('button', { name: 'Gửi link đăng nhập' }).click()
-  await expect(page.getByRole('status')).toContainText('link đăng nhập đã được gửi')
-  const entries = (await readFile(MAGIC_LINK_LOG, 'utf8'))
-    .trim()
-    .split('\n')
-    .map((l) => JSON.parse(l) as { email: string; url: string })
-  const link = entries.findLast((e) => e.email === REVIEWER)?.url
-  if (!link) throw new Error('no sign-in link written')
-  await page.goto(link)
-  await expect(page).toHaveURL('/review')
+async function reviewerPage(browser: Browser): Promise<Page> {
+  await addLinkedUser(REVIEWER, 'Linh', 'reviewer')
+  const page = await staffPage(browser, REVIEWER)
   await expect(page.getByRole('heading', { level: 1, name: 'Kiểm duyệt' })).toBeVisible()
   return page
 }
@@ -66,7 +48,7 @@ test('moderation - a new spot waits for review, then goes public once a reviewer
   await expect(visitor.getByText('11 địa điểm')).toBeVisible()
   await expect(visitor.getByRole('button', { name: /^Bassin de la Villette/ })).toHaveCount(0)
 
-  const reviewer = await staffPage(browser)
+  const reviewer = await reviewerPage(browser)
   await reviewer.getByRole('tab', { name: /^Địa điểm/ }).click()
   const card = reviewer.getByRole('article', { name: 'Bassin de la Villette' })
   await card.getByRole('button', { name: 'Duyệt' }).click()
@@ -92,7 +74,7 @@ test('moderation - a rejected photo: the author is notified and sees the reason 
   // Shown to its uploader with its status.
   await expect(page.getByText('Chờ duyệt')).toBeVisible()
 
-  const reviewer = await staffPage(browser)
+  const reviewer = await reviewerPage(browser)
   // The review queue shows a spot's original (French) name.
   const card = reviewer.getByRole('article', { name: 'Tour Eiffel' })
   await card.getByLabel('Lý do từ chối').selectOption('people_identifiable')
@@ -124,7 +106,7 @@ test('moderation - a visitor reports a photo; the reviewer hides it', async ({ p
   await dialog.getByRole('button', { name: 'Gửi báo cáo' }).click()
   await expect(dialog.getByRole('status')).toContainText('Cảm ơn')
 
-  const reviewer = await staffPage(browser)
+  const reviewer = await reviewerPage(browser)
   await reviewer.getByRole('tab', { name: /^Báo cáo/ }).click()
   const report = reviewer.getByRole('article', { name: 'Musée du Louvre' })
   await expect(report).toContainText('Vi phạm bản quyền')
@@ -139,7 +121,7 @@ test('moderation - a visitor reports a photo; the reviewer hides it', async ({ p
 test('moderation - the new pages pass axe (review queue, my posts, staff sign-in)', async ({ page, browser }) => {
   const eiffel = await spotId('eiffel')
   await uploadPhoto(eiffel, IMAGES.withExif, { pending: true })
-  const reviewer = await staffPage(browser)
+  const reviewer = await reviewerPage(browser)
   await expect(reviewer.getByRole('article').first()).toBeVisible()
   const check = async (p: Page) =>
     (await new AxeBuilder({ page: p }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze()).violations.map(

@@ -83,6 +83,7 @@ export function AccountMenu() {
               </p>
               {item(unread ? `${t('account.myPosts')} (${unread})` : t('account.myPosts'), () => navigate('/me/posts'))}
               {isStaff && item(t('account.review'), () => navigate('/review'))}
+              {me.role === 'admin' && item(t('account.admin'), () => navigate('/admin'))}
               {item(t('account.rename'), () => ui.open('rename'))}
               {item(t('account.recoveryCode'), () => ui.open('recovery-show'))}
               {item(t('account.signOut'), () => ui.open('sign-out'))}

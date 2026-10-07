@@ -6,6 +6,7 @@ import { pinoHttp } from 'pino-http'
 import { corsOrigins, env } from './config/env.js'
 import { logger } from './lib/logger.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { adminRouter } from './modules/admin/admin.routes.js'
 import { originCheck } from './middleware/originCheck.js'
 import { authRouter } from './modules/auth/auth.routes.js'
 import { healthRouter } from './modules/health/health.routes.js'
@@ -41,6 +42,7 @@ export function createApp() {
   api.use('/photos', photoRouter)
   api.use('/reports', reportsRouter)
   api.use('/moderation', moderationRouter)
+  api.use('/admin', adminRouter)
   app.use('/api/v1', api)
 
   app.use('/tiles', tileRouter)
