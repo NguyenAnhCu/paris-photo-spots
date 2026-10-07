@@ -2,6 +2,7 @@
 import type { Page } from '@playwright/test'
 import { spotId } from '../support/db.js'
 import { LAYERS, PIN_HIT_OFFSET_Y, rendered, waitForIdle, waitForPins } from '../support/map.js'
+import { acceptTerms } from '../support/identity.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
 useFreshDatabase()
@@ -80,5 +81,6 @@ test('mobile - "Chọn trên bản đồ": Huỷ restores the old place, Xong ke
 
   await expect(page.getByLabel('Tên địa điểm')).toHaveValue('Bậc thang Montmartre')
   await expect(page.getByText(/^48\.88\d+, 2\.3[34]\d+$/)).toBeVisible()
+  await acceptTerms(page)
   await expect(page.getByRole('button', { name: 'Đăng mark' })).toBeEnabled()
 })

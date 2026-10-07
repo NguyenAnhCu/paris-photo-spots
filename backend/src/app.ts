@@ -5,9 +5,11 @@ import helmet from 'helmet'
 import { pinoHttp } from 'pino-http'
 import { corsOrigins, env } from './config/env.js'
 import { logger } from './lib/logger.js'
-import { authenticate } from './middleware/auth.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { originCheck } from './middleware/originCheck.js'
+import { authRouter } from './modules/auth/auth.routes.js'
 import { healthRouter } from './modules/health/health.routes.js'
+import { meRouter } from './modules/me/me.routes.js'
 import { photoRouter } from './modules/photos/photo.routes.js'
 import { poiRouter } from './modules/pois/poi.routes.js'
 import { regionRouter } from './modules/regions/region.routes.js'
@@ -19,14 +21,18 @@ export function createApp() {
   const app = express()
 
   app.use(helmet())
-  app.use(cors({ origin: corsOrigins }))
+  // credentials: the session cookie, for a web app served from another origin than the API (same origin in our setups).
+  app.use(cors({ origin: corsOrigins, credentials: true }))
   app.use(compression())
-  app.use(express.json({ limit: env.JSON_BODY_LIMIT }))
   app.use(pinoHttp({ logger }))
-  app.use(authenticate)
+  // Better Auth parses its own body: before express.json().
+  app.use('/api/auth', authRouter)
+  app.use(express.json({ limit: env.JSON_BODY_LIMIT }))
 
   const api = express.Router()
+  api.use(originCheck([env.PUBLIC_ORIGIN, ...corsOrigins]))
   api.use('/health', healthRouter)
+  api.use('/me', meRouter)
   api.use('/pois', poiRouter)
   api.use('/regions', regionRouter)
   api.use('/spots', spotRouter)

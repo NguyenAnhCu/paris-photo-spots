@@ -12,7 +12,6 @@ const optionalText = (re: RegExp, max: number) =>
 
 export const UploadPhotoFields = z.object({
   spot_id: z.string().uuid(),
-  author_name: optionalText(/^[^<>]*$/, 60),
   focal: optionalText(/^\d{1,4}mm$/, 10),
   aperture: optionalText(/^f\/\d{1,2}(\.\d{1,2})?$/, 10),
   shutter: optionalText(/^(1\/\d{1,6}|\d{1,4}(\.\d{1,2})?)s$/, 12),

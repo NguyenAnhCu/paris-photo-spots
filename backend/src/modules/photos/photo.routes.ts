@@ -3,6 +3,7 @@ import multer from 'multer'
 import { env } from '../../config/env.js'
 import { AppError } from '../../lib/errors.js'
 import { writeRateLimit } from '../../middleware/rateLimit.js'
+import { currentUser, requirePermission } from '../auth/session.js'
 import { ACCEPTED_IMAGE_TYPES, ListPhotosBody, UploadPhotoFields } from './photo.schemas.js'
 import { photoService } from './photo.service.js'
 
@@ -19,10 +20,10 @@ const upload = multer({
   },
 })
 
-// Rate limit runs before multer so rejected clients don't get to upload megabytes first.
-photoRouter.post('/', writeRateLimit, upload.single('file'), async (req, res) => {
+// Rate limit and the session check run before multer so rejected clients don't get to upload megabytes first.
+photoRouter.post('/', writeRateLimit, requirePermission('post'), upload.single('file'), async (req, res) => {
   const fields = UploadPhotoFields.parse(req.body)
-  res.status(201).json(await photoService.upload(fields, req.file?.buffer))
+  res.status(201).json(await photoService.upload(currentUser(req), fields, req.file?.buffer))
 })
 
 photoRouter.post('/list', async (req, res) => {

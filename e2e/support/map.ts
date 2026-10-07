@@ -91,5 +91,18 @@ export async function inView(page: Page, points: [number, number][]): Promise<bo
   }, points)
 }
 
+// Clicks the map where [lng, lat] is drawn right now (after the map settled, e.g. into placement mode).
+export async function clickMapAt(page: Page, at: [number, number]) {
+  await waitForIdle(page)
+  const p = await page.evaluate((at) => {
+    const map = window.__map
+    if (!map) throw new Error('map not ready')
+    const box = map.getCanvas().getBoundingClientRect()
+    const xy = map.project(at)
+    return { x: box.left + xy.x, y: box.top + xy.y }
+  }, at)
+  await page.mouse.click(p.x, p.y)
+}
+
 // Pins are anchored at the bottom: aim a little above the coordinate to hit the drop shape.
 export const PIN_HIT_OFFSET_Y = -14

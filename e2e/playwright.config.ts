@@ -58,9 +58,14 @@ export default defineConfig({
         PORT: String(API_PORT),
         DATABASE_URL,
         CORS_ORIGINS: WEB_URL,
-        JWT_SECRET: 'e2e-only-secret-not-used-anywhere-else',
+        BETTER_AUTH_SECRET: 'e2e-only-secret-not-used-anywhere-else-0123',
+        PUBLIC_ORIGIN: WEB_URL,
         STORAGE_DIR,
         WRITE_RATE_LIMIT: '10000',
+        // Every spec creates anonymous identities from 127.0.0.1.
+        AUTH_RATE_LIMIT_PER_MINUTE: '10000',
+        QUOTA_ANON_SPOTS_PER_DAY: '1000',
+        QUOTA_ANON_PHOTOS_PER_DAY: '1000',
       },
     },
     {

@@ -1,0 +1,204 @@
+/* ── Account button + menu (header) ── */
+.account-menu {
+  position: relative;
+}
+.account-menu__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  justify-content: center;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-float);
+  color: var(--ink);
+  font: 500 14px/1 var(--font-body);
+  cursor: pointer;
+}
+.account-menu__button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.account-menu__name {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-menu__popover {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 230px;
+  padding: 8px;
+  border-radius: var(--r-tile);
+  background: var(--panel-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-float);
+  display: flex;
+  flex-direction: column;
+}
+.account-menu__who {
+  margin: 4px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.account-menu__who span {
+  font-size: 12px;
+  color: var(--neutral-700);
+}
+.account-menu__item {
+  min-height: var(--tap-min);
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--r-input);
+  background: transparent;
+  color: var(--ink);
+  font: 500 14px/1.2 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+}
+.account-menu__item:hover,
+.account-menu__item:focus-visible {
+  background: var(--tile-bg);
+  outline: none;
+}
+
+/* ── Identity strip (add forms) ── */
+.identity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--r-tile);
+  background: var(--tile-bg);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.identity__who {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.identity__who svg {
+  flex: none;
+  color: var(--accent-700);
+}
+.identity__terms {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: var(--tap-min);
+  cursor: pointer;
+}
+.identity__terms input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--accent-700);
+}
+.identity a,
+.link-button {
+  color: var(--accent-700);
+  font-weight: 500;
+  text-decoration: underline;
+}
+.link-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .link-button {
+    padding-block: 12px;
+    margin-block: -12px;
+  }
+  /* Inline link in a sentence: vertical padding grows the tap area without moving the lines. */
+  .identity a {
+    padding-block: 14px;
+  }
+  .identity__terms input {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* ── Dialog ── */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--edge);
+  background: var(--backdrop);
+}
+.modal__box {
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 2 * var(--edge));
+  overflow: auto;
+  padding: 20px 22px 22px;
+  border-radius: var(--r-card);
+  background: var(--bg);
+  box-shadow: var(--shadow-dialog);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.modal__head h2 {
+  margin: 0;
+  font: 600 26px/1.1 var(--font-display);
+}
+.modal__text,
+.modal__warn,
+.modal__error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.modal__warn {
+  color: var(--clay-ink);
+}
+.modal__error {
+  color: var(--clay-ink);
+  font-weight: 500;
+}
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.recovery-code {
+  display: block;
+  padding: 14px;
+  border-radius: var(--r-input);
+  background: var(--surface);
+  font: 600 20px/1.2 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-align: center;
+  user-select: all;
+  word-break: break-all;
+}

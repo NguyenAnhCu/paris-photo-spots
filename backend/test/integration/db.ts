@@ -4,7 +4,9 @@ import { pool } from '../../src/db/pool.js'
 import { REGION_7E, SPOTS, STOPS, type SpotKey, type StopKey } from '../fixtures/places.js'
 
 export async function resetDb(): Promise<void> {
-  await pool.query('TRUNCATE pois, photos, transit_stops, regions, import_runs')
+  await pool.query(
+    'TRUNCATE pois, photos, transit_stops, regions, import_runs, users, auth_sessions, auth_accounts, auth_verifications',
+  )
 }
 
 export type Seeded = { spot: Record<SpotKey, string>; stop: Record<StopKey, string> }

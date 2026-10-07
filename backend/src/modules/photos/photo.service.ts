@@ -1,5 +1,7 @@
 import { AppError } from '../../lib/errors.js'
 import { photoUrl, removePhoto, savePhoto } from '../../storage/photoStorage.js'
+import type { AuthUser } from '../auth/auth.service.js'
+import { meService } from '../me/me.service.js'
 import { spotService } from '../spots/spot.service.js'
 import { photoRepository, type PhotoRow } from './photo.repository.js'
 import type { ListPhotosBody, UploadPhotoFields } from './photo.schemas.js'
@@ -15,9 +17,11 @@ function toResponse(row: PhotoRow) {
 }
 
 export const photoService = {
-  async upload(fields: UploadPhotoFields, file: Buffer | undefined) {
+  async upload(actor: AuthUser, fields: UploadPhotoFields, file: Buffer | undefined) {
     if (!file) throw new AppError('UPLOAD_MISSING_FILE', 400, 'No image file in the request')
     await spotService.ensureExists(fields.spot_id)
+    // Before decoding the image: a refused upload should cost no CPU.
+    await meService.assertCanPost(actor, 'photo')
 
     const stored = await savePhoto(file)
     try {
@@ -27,7 +31,7 @@ export const photoService = {
         thumb_name: stored.thumbName,
         width: stored.width,
         height: stored.height,
-        author_name: fields.author_name ?? null,
+        user_id: actor.id,
         focal: fields.focal ?? null,
         aperture: fields.aperture ?? null,
         shutter: fields.shutter ?? null,

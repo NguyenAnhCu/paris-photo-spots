@@ -11,7 +11,7 @@ useFreshDatabase()
 let eiffel: string
 test.beforeAll(async () => {
   eiffel = await spotId('eiffel')
-  await uploadPhoto(eiffel, IMAGES.noExif, { author_name: 'Linh', focal: '35mm' })
+  await uploadPhoto(eiffel, IMAGES.noExif, { author: 'Linh', focal: '35mm' })
 })
 
 const SCREENS: { name: string; path: () => string; ready: (page: Page) => Promise<void> }[] = [
@@ -59,7 +59,10 @@ const smallTargets = (page: Page) =>
     const els = document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [role=tab]')
     for (const el of els) {
       if (el.closest('.maplibregl-ctrl-attrib') || (el as HTMLInputElement).type === 'file') continue
-      const box = el.getBoundingClientRect()
+      // A checkbox or radio inside a <label> is tapped through the whole label.
+      const isToggle = el instanceof HTMLInputElement && (el.type === 'checkbox' || el.type === 'radio')
+      const target = isToggle ? (el.closest('label') ?? el) : el
+      const box = target.getBoundingClientRect()
       if (!box.width || !box.height || getComputedStyle(el).visibility === 'hidden') continue
       if (box.width < 44 || box.height < 44) {
         const label = el.getAttribute('aria-label') || el.textContent || el.tagName

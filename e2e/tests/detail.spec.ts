@@ -10,8 +10,8 @@ let eiffel: string
 
 test.beforeAll(async () => {
   eiffel = await spotId('eiffel')
-  await uploadPhoto(eiffel, IMAGES.noExif, { author_name: 'Linh' })
-  await uploadPhoto(eiffel, IMAGES.noExif, { author_name: 'Minh', focal: '35mm', aperture: 'f/1.8', iso: '100' })
+  await uploadPhoto(eiffel, IMAGES.noExif, { author: 'Linh' })
+  await uploadPhoto(eiffel, IMAGES.noExif, { author: 'Minh', focal: '35mm', aperture: 'f/1.8', iso: '100' })
 })
 
 test('detail - shows best time and weather, and no crowd information', async ({ page }) => {

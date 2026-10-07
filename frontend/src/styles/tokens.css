@@ -67,6 +67,7 @@
   /* Shadows */
   --shadow-panel: 0 20px 60px rgba(43, 39, 35, 0.26);
   --shadow-dialog: 0 24px 70px rgba(43, 39, 35, 0.32);
+  --backdrop: rgba(43, 39, 35, 0.4);
   --shadow-float: 0 8px 28px rgba(70, 52, 34, 0.16);
   --shadow-card: 0 6px 18px rgba(70, 52, 34, 0.14);
   --shadow-card-hover: 0 14px 34px rgba(70, 52, 34, 0.28);
