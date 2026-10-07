@@ -30,7 +30,7 @@ export const adminService = {
   async setRole(actor: AuthUser, { user_id, role }: SetRoleBody) {
     const user = await target(user_id)
     if (user.role === role) return { role }
-    // Staff sign in with a link sent to their email: an anonymous identity has none.
+    // Staff are trusted with other people's content: an anonymous identity (no accountable person) never is.
     if (role !== 'participant' && user.is_anonymous) {
       throw new AppError('ANONYMOUS_CANNOT_BE_STAFF', 409, 'An anonymous identity cannot become staff')
     }

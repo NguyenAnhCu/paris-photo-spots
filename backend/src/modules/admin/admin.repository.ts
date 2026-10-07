@@ -4,6 +4,7 @@ export type AdminUserRow = {
   id: string
   name: string
   email: string | null
+  username: string | null
   role: string
   is_anonymous: boolean
   posting_suspended_until: string | null
@@ -25,25 +26,27 @@ export type LogRow = {
   target_name: string | null
 }
 
-const ANON_DOMAIN = '@anonymous.placeholder.invalid'
+// Anonymous identities and staff accounts get placeholder emails (….placeholder.invalid) that are never shown.
+const PLACEHOLDER_DOMAIN = '.placeholder.invalid'
 
 export const adminRepository = {
-  // Staff first, then by most recent; anonymous identities show no (placeholder) email.
+  // Staff first, then by most recent.
   async listUsers(params: { search?: string; role?: string; offset: number; limit: number }) {
     const { rows } = await pool.query<AdminUserRow & { total: string }>(
       `SELECT u.id, u.display_name AS name,
-              CASE WHEN u.email LIKE '%' || $5 THEN NULL ELSE u.email END AS email,
+              CASE WHEN u.email LIKE '%' || $5 THEN NULL ELSE u.email END AS email, u.username,
               u.role, u.is_anonymous, u.posting_suspended_until, u.created_at,
               (SELECT count(*)::int FROM pois WHERE created_by = u.id AND deleted_at IS NULL) AS spots,
               (SELECT count(*)::int FROM photos WHERE user_id = u.id AND deleted_at IS NULL) AS photos,
               count(*) OVER () AS total
        FROM users u
        WHERE u.deleted_at IS NULL
-         AND ($1::text IS NULL OR u.display_name ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%')
+         AND ($1::text IS NULL OR u.display_name ILIKE '%' || $1 || '%' OR u.email ILIKE '%' || $1 || '%'
+              OR u.username ILIKE '%' || $1 || '%')
          AND ($2::text IS NULL OR u.role = $2)
        ORDER BY (u.role <> 'participant') DESC, u.created_at DESC, u.id
        OFFSET $3 LIMIT $4`,
-      [params.search || null, params.role ?? null, params.offset, params.limit, ANON_DOMAIN],
+      [params.search || null, params.role ?? null, params.offset, params.limit, PLACEHOLDER_DOMAIN],
     )
     return { items: rows, total: Number(rows[0]?.total ?? 0) }
   },

@@ -66,6 +66,7 @@ function UsersTab() {
               <div className="admin__who">
                 <b>{u.name}</b>
                 {u.isAnonymous && <span className="status-chip">{t('account.anonymous')}</span>}
+                {u.username && <span className="admin__email">@{u.username}</span>}
                 {u.email && <span className="admin__email">{u.email}</span>}
                 <span className="admin__counts">{t('admin.counts', { spots: u.spots, photos: u.photos })}</span>
                 {suspended && u.postingSuspendedUntil && (

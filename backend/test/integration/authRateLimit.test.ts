@@ -1,4 +1,4 @@
-// Anonymous sign-in and recovery-code attempts per IP, with a tiny limit (env.ts reads it on import).
+// Anonymous sign-in, recovery-code and staff password attempts per IP, with a tiny limit (env.ts reads it on import).
 import request from 'supertest'
 import { describe, expect, it } from 'vitest'
 
@@ -22,6 +22,13 @@ describe('auth rate limit per IP', () => {
       .send({ code: 'AAAA-BBBB-CCCC-DDDD' })
       .expect(429)
     expect(guess.body.error.code).toBe('RATE_LIMITED')
+    // Staff password guesses too.
+    const password = await request(app)
+      .post('/api/auth/sign-in/username')
+      .set('Origin', ORIGIN)
+      .send({ username: 'admin', password: 'guess' })
+      .expect(429)
+    expect(password.body.error.code).toBe('RATE_LIMITED')
   })
 
   it('reading the session is never limited', async () => {

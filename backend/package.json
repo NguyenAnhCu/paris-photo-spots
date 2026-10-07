@@ -18,7 +18,7 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test:coverage": "vitest run --coverage",
-    "user:role": "tsx --env-file=.env db/admin/userRole.ts",
+    "staff": "tsx --env-file=.env db/admin/staff.ts",
     "cleanup": "tsx --env-file=.env db/admin/cleanup.ts"
   },
   "dependencies": {

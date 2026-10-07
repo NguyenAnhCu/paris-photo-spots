@@ -1,47 +1,85 @@
 import { useId, useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { requestStaffLink } from '@/api/moderation'
+import { useNavigate } from 'react-router-dom'
+import { ApiError } from '@/api/client'
 import { PillButton } from '@/components/ui'
+import { useStaffSignIn } from '@/hooks/useMe'
+import { translateApiError } from '@/i18n/apiError'
 import { useI18n } from '@/i18n/useI18n'
 import './StandalonePage.css'
 
-// Reviewers and admins sign in with a one-time link. Same answer for any address: no probing who is staff.
+// Codes that would tell a guesser which part was wrong (or how usernames look): all shown as one message.
+const BAD_CREDENTIALS = new Set([
+  'INVALID_USERNAME_OR_PASSWORD',
+  'USERNAME_TOO_SHORT',
+  'USERNAME_TOO_LONG',
+  'INVALID_USERNAME',
+])
+
+// Reviewers and admins sign in with the username and password an admin gave them (no sign-up).
 export function StaffSignInPage() {
   const { t } = useI18n()
-  const emailId = useId()
-  const [email, setEmail] = useState('')
-  const send = useMutation({ mutationFn: () => requestStaffLink(email.trim()) })
+  const navigate = useNavigate()
+  const usernameId = useId()
+  const passwordId = useId()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const signIn = useStaffSignIn()
+  const error = signIn.error
+  const message =
+    error instanceof ApiError && error.code && BAD_CREDENTIALS.has(error.code)
+      ? t('errors.INVALID_USERNAME_OR_PASSWORD')
+      : error && translateApiError(error, t)
+
   return (
     <main className="standalone">
       <h1>{t('staff.title')}</h1>
-      {send.isSuccess ? (
-        <p role="status">{t('staff.sent')}</p>
-      ) : (
-        <form
-          className="standalone__form"
-          onSubmit={(e) => {
-            e.preventDefault()
-            send.mutate()
-          }}
-        >
-          <label className="field" htmlFor={emailId}>
-            <span className="field__label">{t('staff.email')}</span>
-            <input
-              id={emailId}
-              className="input"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          {send.isError && <p role="alert">{t('errors.generic')}</p>}
-          <PillButton variant="primary" type="submit" disabled={send.isPending || !email.includes('@')}>
-            {t('staff.send')}
-          </PillButton>
-        </form>
-      )}
+      <p>{t('staff.intro')}</p>
+      <form
+        className="standalone__form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          signIn.mutate(
+            { username, password },
+            {
+              onSuccess: (me) => {
+                const role = me.user?.role
+                navigate(role === 'admin' ? '/admin' : role === 'reviewer' ? '/review' : '/', { replace: true })
+              },
+              onError: () => setPassword(''),
+            },
+          )
+        }}
+      >
+        <label className="field" htmlFor={usernameId}>
+          <span className="field__label">{t('staff.username')}</span>
+          <input
+            id={usernameId}
+            className="input"
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            spellCheck={false}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
+        <label className="field" htmlFor={passwordId}>
+          <span className="field__label">{t('staff.password')}</span>
+          <input
+            id={passwordId}
+            className="input"
+            type="password"
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        {message && <p role="alert">{message}</p>}
+        <PillButton variant="primary" type="submit" disabled={signIn.isPending || !username.trim() || !password}>
+          {t('staff.submit')}
+        </PillButton>
+      </form>
     </main>
   )
 }

@@ -57,6 +57,22 @@ export function useRecoverySignIn() {
   })
 }
 
+export function useStaffSignIn() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ username, password }: { username: string; password: string }) => {
+      await authApi.signInStaff(username.trim(), password)
+      return authApi.me()
+    },
+    // Another person now: everything cached for the previous identity goes.
+    onSuccess: (me) => {
+      queryClient.removeQueries({ queryKey: ['me', 'submissions'] })
+      queryClient.setQueryData(meKey, me)
+      return queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
+    },
+  })
+}
+
 export function useSignOut() {
   const queryClient = useQueryClient()
   return useMutation({

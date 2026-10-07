@@ -28,8 +28,6 @@ const EnvSchema = z.object({
   TRUST_MIN_APPROVED: z.coerce.number().int().nonnegative().default(3),
   TRUST_WINDOW_DAYS: z.coerce.number().int().positive().default(30),
   REVIEWER_SUSPEND_MAX_DAYS: z.coerce.number().int().positive().default(7),
-  // Staff sign-in links (magic link). No email service yet: dev and E2E append each link to this file instead.
-  AUTH_MAGIC_LINK_LOG: z.string().default(''),
   MAX_RADIUS_M: z.coerce.number().int().positive().default(5000),
   MAX_RESULTS: z.coerce.number().int().positive().default(500),
   MAX_POLYGON_VERTICES: z.coerce.number().int().positive().default(1000),
@@ -64,6 +62,8 @@ const EnvSchema = z.object({
   // New identities (anonymous sign-in) and recovery-code attempts per IP per minute: slows down identity farming and
   // code guessing (a code is 80 bits, guessing must still be slow).
   AUTH_RATE_LIMIT_PER_MINUTE: z.coerce.number().int().positive().default(10),
+  // Staff passwords shorter than this are refused in production (set with `npm run staff -w backend`).
+  STAFF_PASSWORD_MIN_LENGTH: z.coerce.number().int().min(8).default(12),
 })
 
 export type Env = z.infer<typeof EnvSchema>

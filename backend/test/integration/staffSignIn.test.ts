@@ -1,96 +1,88 @@
-// Staff sign in with a one-time link. No email service yet: the link is written to AUTH_MAGIC_LINK_LOG (env.ts reads
-// it on import, so src/ is imported after setting it).
-import { mkdtemp, readFile } from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
+// Staff (reviewers, admins) sign in with a username and a password. Accounts come from the staff command-line tool
+// only: no sign-up, no password reset by email, no way to probe which usernames exist.
 import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
-
-const LOG = path.join(await mkdtemp(path.join(os.tmpdir(), 'pmv-links-')), 'links.jsonl')
-process.env.AUTH_MAGIC_LINK_LOG = LOG
-const { createApp } = await import('../../src/app.js')
-const { env } = await import('../../src/config/env.js')
-const { pool } = await import('../../src/db/pool.js')
-const { resetDb } = await import('./db.js')
-const { meOf } = await import('./auth.js')
-const { setUserRole } = await import('../../db/admin/userRole.js')
+import { createStaff } from '../../db/admin/staff.js'
+import { createApp } from '../../src/app.js'
+import { env } from '../../src/config/env.js'
+import { pool } from '../../src/db/pool.js'
+import { meOf, signIn } from './auth.js'
+import { resetDb } from './db.js'
 
 const app = createApp()
+const ORIGIN = env.PUBLIC_ORIGIN
+const PASSWORD = 'correct horse battery'
 
 beforeEach(async () => {
   await resetDb()
 })
 
-async function lastLink(email: string): Promise<URL> {
-  const lines = (await readFile(LOG, 'utf8')).trim().split('\n')
-  const entry = lines.map((l) => JSON.parse(l) as { email: string; url: string }).findLast((e) => e.email === email)
-  if (!entry) throw new Error(`no link for ${email}`)
-  return new URL(entry.url)
-}
+const signInWith = (agent: request.Agent | ReturnType<typeof request>, username: string, password: string) =>
+  agent.post('/api/auth/sign-in/username').set('Origin', ORIGIN).send({ username, password, rememberMe: true }) // the server shortens it anyway
 
-describe('staff sign-in link', () => {
-  it('signs an existing reviewer in and redirects to the review page', async () => {
-    await pool.query(
-      `INSERT INTO users (email, email_verified, display_name, role) VALUES ('linh@team.example', true, 'Linh', 'reviewer')`,
+describe('staff sign-in with username and password', () => {
+  it('signs an admin in, whatever the case of the username typed; the session lasts a day even if asked to remember', async () => {
+    await createStaff({ username: 'admin', role: 'admin', password: PASSWORD, name: 'Minh' })
+    const agent = request.agent(app)
+    await signInWith(agent, 'Admin', PASSWORD).expect(200)
+    expect(await meOf(agent)).toMatchObject({ name: 'Minh', role: 'admin', is_anonymous: false })
+    await agent.post('/api/v1/admin/users/list').set('Origin', ORIGIN).send({}).expect(200)
+    const { rows } = await pool.query<{ hours: number }>(
+      `SELECT (extract(epoch FROM expires_at - NOW()) / 3600)::float8 AS hours FROM auth_sessions
+       WHERE user_id = (SELECT id FROM users WHERE username = 'admin')`,
     )
-    const agent = request.agent(app)
-    await agent
-      .post('/api/auth/sign-in/magic-link')
-      .set('Origin', env.PUBLIC_ORIGIN)
-      .send({ email: 'linh@team.example', callbackURL: '/review' })
-      .expect(200)
-
-    const link = await lastLink('linh@team.example')
-    expect(link.pathname).toBe('/api/auth/magic-link/verify')
-    const res = await agent.get(link.pathname + link.search).expect(302)
-    expect(res.headers.location).toBe(`${env.PUBLIC_ORIGIN}/review`)
-    expect(await meOf(agent)).toMatchObject({ name: 'Linh', role: 'reviewer', is_anonymous: false })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.hours).toBeLessThanOrEqual(24)
+    expect(rows[0]?.hours).toBeGreaterThan(23)
   })
 
-  it('the first admin made with user:role signs in by link, whatever the case of the email typed', async () => {
-    await setUserRole(' NaCu@Example.com ', 'admin', 'nacu')
-    const agent = request.agent(app)
-    await agent
-      .post('/api/auth/sign-in/magic-link')
-      .set('Origin', env.PUBLIC_ORIGIN)
-      .send({ email: 'Nacu@example.COM', callbackURL: '/admin' })
-      .expect(200)
-    const link = await lastLink('nacu@example.com')
-    const res = await agent.get(link.pathname + link.search).expect(302)
-    expect(res.headers.location).toBe(`${env.PUBLIC_ORIGIN}/admin`)
-    expect(await meOf(agent)).toMatchObject({ name: 'nacu', role: 'admin', is_anonymous: false })
-    await agent.post('/api/v1/admin/users/list').set('Origin', env.PUBLIC_ORIGIN).send({}).expect(200)
+  it('a wrong password and an unknown username get the same answer', async () => {
+    await createStaff({ username: 'linh', role: 'reviewer', password: PASSWORD })
+    const wrong = await signInWith(request(app), 'linh', 'not the password').expect(401)
+    const unknown = await signInWith(request(app), 'nobody', PASSWORD).expect(401)
+    expect(wrong.body).toEqual(unknown.body)
   })
 
-  it('an unknown email gets no account (no sign-up through links)', async () => {
-    const agent = request.agent(app)
-    await agent
-      .post('/api/auth/sign-in/magic-link')
-      .set('Origin', env.PUBLIC_ORIGIN)
-      .send({ email: 'stranger@example.com', callbackURL: '/review' })
-      .expect(200) // same answer as for a known email: no account probing
-    const link = await lastLink('stranger@example.com')
-    await agent.get(link.pathname + link.search)
-    expect((await agent.get('/api/v1/me').expect(200)).body.user).toBeNull()
-    const { rows } = await pool.query("SELECT 1 FROM users WHERE email = 'stranger@example.com'")
+  it('the password is stored hashed, never as typed', async () => {
+    await createStaff({ username: 'linh', role: 'reviewer', password: PASSWORD })
+    const { rows } = await pool.query<{ password: string; provider_id: string }>(
+      'SELECT password, provider_id FROM auth_accounts',
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.provider_id).toBe('credential')
+    expect(rows[0]?.password).not.toContain(PASSWORD)
+  })
+
+  it('no sign-up, no reset by email, no username probing, no sign-in links', async () => {
+    const closed = [
+      ['/sign-up/email', { email: 'x@example.com', password: PASSWORD, name: 'X', username: 'xavier' }],
+      ['/sign-in/email', { email: 'x@example.com', password: PASSWORD }],
+      ['/request-password-reset', { email: 'x@example.com' }],
+      ['/is-username-available', { username: 'admin' }],
+      ['/sign-in/magic-link', { email: 'x@example.com' }],
+    ] as const
+    for (const [path, body] of closed) {
+      const res = await request(app).post(`/api/auth${path}`).set('Origin', ORIGIN).send(body)
+      expect(res.status, path).toBeGreaterThanOrEqual(400)
+    }
+    const { rows } = await pool.query('SELECT 1 FROM users')
     expect(rows).toEqual([])
   })
 
-  it('a link works once', async () => {
-    await pool.query(
-      `INSERT INTO users (email, email_verified, display_name, role) VALUES ('minh@team.example', true, 'Minh', 'admin')`,
-    )
-    await request(app)
-      .post('/api/auth/sign-in/magic-link')
-      .set('Origin', env.PUBLIC_ORIGIN)
-      .send({ email: 'minh@team.example', callbackURL: '/review' })
-      .expect(200)
-    const link = await lastLink('minh@team.example')
-    await request(app)
-      .get(link.pathname + link.search)
-      .expect(302)
-    const second = request.agent(app)
-    await second.get(link.pathname + link.search)
-    expect((await second.get('/api/v1/me').expect(200)).body.user).toBeNull()
+  it('an anonymous participant who signs in as staff on the same browser keeps the posts', async () => {
+    await createStaff({ username: 'linh', role: 'reviewer', password: PASSWORD, name: 'Linh' })
+    const agent = await signIn(app)
+    const before = await meOf(agent)
+    await agent
+      .post('/api/v1/spots')
+      .set('Origin', ORIGIN)
+      .send({ name: 'Canal', photo_category: 'bridge', lng: 2.3655, lat: 48.8712 })
+      .expect(201)
+    await signInWith(agent, 'linh', PASSWORD).expect(200)
+    const after = await meOf(agent)
+    expect(after).toMatchObject({ name: 'Linh', role: 'reviewer' })
+    const { rows } = await pool.query('SELECT created_by FROM pois WHERE name = $1', ['Canal'])
+    expect(rows).toEqual([{ created_by: after.id }])
+    expect(after.id).not.toBe(before.id)
   })
 })

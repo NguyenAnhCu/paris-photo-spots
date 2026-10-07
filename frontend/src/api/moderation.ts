@@ -120,13 +120,3 @@ export const submissionsApi = {
   mine: (signal?: AbortSignal) => api.get<{ spots: MySpot[]; photos: MyPhoto[] }>('/me/submissions', { signal }),
   markSeen: () => api.post<unknown>('/me/notifications/seen', { body: {} }),
 }
-
-// Staff sign in with a one-time link sent by email (dev: written to a log file by the backend).
-export async function requestStaffLink(email: string): Promise<void> {
-  const res = await fetch('/api/auth/sign-in/magic-link', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, callbackURL: '/review' }),
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-}
