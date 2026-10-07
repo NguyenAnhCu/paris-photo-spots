@@ -34,7 +34,7 @@
     "pino": "^10.4.0",
     "pino-http": "^11.0.0",
     "sharp": "^0.35.5",
-    "zod": "^3.25.0"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
