@@ -16,7 +16,7 @@ const LAYERS: Record<string, TileLayer> = {
         SELECT ST_AsMVTGeom(ST_Transform(p.geom, 3857), b.geom_3857, 4096, 64, true) AS geom,
                p.id::text AS id, p.name, p.category
         FROM pois p, bounds b
-        WHERE p.deleted_at IS NULL
+        WHERE p.deleted_at IS NULL AND p.status = 'approved'
           AND p.geom && ST_Transform(b.geom_3857, 4326)
           AND ($4::text[] IS NULL OR p.category = ANY($4))
       )

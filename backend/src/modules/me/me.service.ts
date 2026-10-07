@@ -1,7 +1,9 @@
 import { env } from '../../config/env.js'
 import { AppError } from '../../lib/errors.js'
+import { initialStatus, type ContentStatus } from '../../lib/moderation.js'
 import { dailyQuota } from '../../lib/permissions.js'
 import { normalizeUserName } from '../../lib/userName.js'
+import { photoUrl } from '../../storage/photoStorage.js'
 import type { AuthUser } from '../auth/auth.service.js'
 import { meRepository, type MeRow } from './me.repository.js'
 import type { PostKind } from './me.schemas.js'
@@ -17,6 +19,7 @@ function toProfile(row: MeRow) {
     has_recovery_code: row.has_recovery_code,
     terms_accepted: row.terms_version === env.TERMS_VERSION,
     posting_suspended_until: row.posting_suspended_until,
+    unread_decisions: row.unread_decisions,
   }
 }
 
@@ -47,6 +50,27 @@ export const meService = {
     if (!result.ok) throw new AppError('INVALID_NAME', 400, 'This name cannot be used')
     await meRepository.rename(user.id, result.name)
     return this.profile(user)
+  },
+
+  async submissions(user: AuthUser) {
+    const { spots, photos } = await meRepository.submissions(user.id)
+    return {
+      spots,
+      photos: photos.map(({ thumb_name, ...rest }) => ({ ...rest, thumb_url: photoUrl(String(thumb_name)) })),
+    }
+  },
+
+  async markNotificationsSeen(user: AuthUser) {
+    await meRepository.markNotificationsSeen(user.id)
+    return this.profile(user)
+  },
+
+  // Status for a new post by this author: public at once for staff and trusted participants, otherwise pending.
+  async initialStatusFor(user: AuthUser, now: Date = new Date()): Promise<ContentStatus> {
+    if (user.role !== 'participant' || user.isAnonymous)
+      return initialStatus(user, { approved: 0, rejectedRecently: 0 }, env)
+    const since = new Date(now.getTime() - env.TRUST_WINDOW_DAYS * DAY_MS)
+    return initialStatus(user, await meRepository.history(user.id, since), env)
   },
 
   // Called by the spot and photo services before writing anything.

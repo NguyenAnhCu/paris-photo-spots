@@ -3,12 +3,12 @@ import { AppError } from '../../lib/errors.js'
 import type { AuthUser } from '../auth/auth.service.js'
 import { meService } from '../me/me.service.js'
 import { spotRepository, type SpotRow } from './spot.repository.js'
-import { displayName, resizeCommonsThumb, spotService } from './spot.service.js'
+import { canSee, displayName, resizeCommonsThumb, spotService } from './spot.service.js'
 
 vi.mock('./spot.repository.js', () => ({
   spotRepository: { listAll: vi.fn(), byId: vi.fn(), insertUserSpotUnlessDuplicate: vi.fn() },
 }))
-vi.mock('../me/me.service.js', () => ({ meService: { assertCanPost: vi.fn() } }))
+vi.mock('../me/me.service.js', () => ({ meService: { assertCanPost: vi.fn(), initialStatusFor: vi.fn() } }))
 const repo = vi.mocked(spotRepository)
 const ACTOR: AuthUser = { id: 'user-1', role: 'participant', isAnonymous: true, name: 'Lữ khách 1234' }
 
@@ -28,6 +28,8 @@ const row = (over: Partial<SpotRow> = {}): SpotRow => ({
   cover_photo_attribution: 'Author · CC BY-SA 4.0 · Wikimedia Commons',
   photo_count: 2,
   source: 'osm',
+  status: 'approved',
+  created_by: null,
   ...over,
 })
 
@@ -108,12 +110,27 @@ describe('spotService.byId', () => {
   })
 })
 
-describe('spotService.ensureExists', () => {
-  it('resolves for a live spot and throws 404 otherwise', async () => {
-    repo.byId.mockResolvedValueOnce(row())
-    await expect(spotService.ensureExists(row().id)).resolves.toBeUndefined()
-    repo.byId.mockResolvedValueOnce(null)
-    await expect(spotService.ensureExists(row().id)).rejects.toMatchObject({ code: 'SPOT_NOT_FOUND' })
+describe('visibility of spots that are not public', () => {
+  const author: AuthUser = { id: 'author', role: 'participant', isAnonymous: true, name: 'A' }
+  const other: AuthUser = { id: 'other', role: 'participant', isAnonymous: false, name: 'B' }
+  const reviewer: AuthUser = { id: 'rev', role: 'reviewer', isAnonymous: false, name: 'R' }
+
+  it.each(['pending', 'rejected', 'hidden'] as const)('%s: only its author and reviewers', (status) => {
+    const spot = { status, created_by: 'author' }
+    expect(canSee(spot, undefined)).toBe(false)
+    expect(canSee(spot, other)).toBe(false)
+    expect(canSee(spot, author)).toBe(true)
+    expect(canSee(spot, reviewer)).toBe(true)
+  })
+
+  it('approved: everyone', () => {
+    expect(canSee({ status: 'approved', created_by: 'author' }, undefined)).toBe(true)
+  })
+
+  it('a spot one may not see answers 404 like an unknown one (its existence is not revealed)', async () => {
+    repo.byId.mockResolvedValue(row({ status: 'pending', created_by: 'author' }))
+    await expect(spotService.byId(row().id, 'vi', other)).rejects.toMatchObject({ code: 'SPOT_NOT_FOUND', status: 404 })
+    await expect(spotService.byId(row().id, 'vi', author)).resolves.toMatchObject({ status: 'pending' })
   })
 })
 
@@ -127,12 +144,16 @@ describe('spotService.create', () => {
   }
 
   it('creates the spot with the typed name as the name in the UI language, then returns its detail', async () => {
+    vi.mocked(meService.initialStatusFor).mockResolvedValue('pending')
     repo.insertUserSpotUnlessDuplicate.mockResolvedValue({ id: 'new-id' })
-    repo.byId.mockResolvedValue(row({ id: 'new-id', name: 'Rue Crémieux', source: 'user' }))
+    repo.byId.mockResolvedValue(
+      row({ id: 'new-id', name: 'Rue Crémieux', source: 'user', status: 'pending', created_by: 'user-1' }),
+    )
     const created = await spotService.create(ACTOR, body)
     expect(repo.insertUserSpotUnlessDuplicate).toHaveBeenCalledWith(
       expect.objectContaining({
         createdBy: 'user-1',
+        status: 'pending', // from the author's trust level
         name: 'Rue Crémieux',
         photoCategory: 'street',
         lng: 2.3708,

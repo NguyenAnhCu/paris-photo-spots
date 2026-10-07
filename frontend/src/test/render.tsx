@@ -137,7 +137,14 @@ export const json = (status: number, body: unknown) =>
 
 // A fake identity backend (GET /api/v1/me, anonymous sign-in, terms, recovery code) to merge into fakeFetch routes.
 // `calls` records what the UI asked for, in order.
-export type IdentityState = { user: null | { name: string; termsAccepted: boolean; hasRecoveryCode: boolean } }
+export type IdentityUser = {
+  name: string
+  termsAccepted: boolean
+  hasRecoveryCode: boolean
+  role?: 'participant' | 'reviewer' | 'admin'
+  unreadDecisions?: number
+}
+export type IdentityState = { user: null | IdentityUser }
 export function identityServer(initial: IdentityState['user'] = null) {
   // A copy: tests share their starting user objects, and the fake server mutates its state (rename, sign-out).
   const state: IdentityState = { user: initial && { ...initial } }
@@ -147,11 +154,12 @@ export function identityServer(initial: IdentityState['user'] = null) {
       user: state.user && {
         id: 'me-1',
         name: state.user.name,
-        is_anonymous: true,
-        role: 'participant',
+        is_anonymous: (state.user.role ?? 'participant') === 'participant',
+        role: state.user.role ?? 'participant',
         has_recovery_code: state.user.hasRecoveryCode,
         terms_accepted: state.user.termsAccepted,
         posting_suspended_until: null,
+        unread_decisions: state.user.unreadDecisions ?? 0,
       },
       terms_version: 'draft-1',
     })

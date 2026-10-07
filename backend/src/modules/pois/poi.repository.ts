@@ -37,7 +37,7 @@ export const poiRepository = {
       `SELECT ${SELECT_COLUMNS},
               ST_Distance(p.geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography) AS distance_m
        FROM pois p
-       WHERE p.deleted_at IS NULL
+       WHERE p.deleted_at IS NULL AND p.status = 'approved'
          AND ST_DWithin(p.geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
          AND ($4::text[] IS NULL OR p.category = ANY($4))
        ORDER BY distance_m
@@ -51,7 +51,7 @@ export const poiRepository = {
     const { rows } = await pool.query<PoiRow>(
       `SELECT ${SELECT_COLUMNS}
        FROM pois p
-       WHERE p.deleted_at IS NULL
+       WHERE p.deleted_at IS NULL AND p.status = 'approved'
          AND ST_Intersects(p.geom, ST_SetSRID(ST_GeomFromGeoJSON($1), 4326))
          AND ($2::text[] IS NULL OR p.category = ANY($2))
        LIMIT $3`,
@@ -67,7 +67,7 @@ export const poiRepository = {
        JOIN regions r ON ST_Intersects(p.geom, r.geom)
        WHERE r.code = $1
          AND r.deleted_at IS NULL
-         AND p.deleted_at IS NULL
+         AND p.deleted_at IS NULL AND p.status = 'approved'
          AND ($2::text[] IS NULL OR p.category = ANY($2))
        LIMIT $3`,
       [params.regionCode, params.categories ?? null, params.limit],
@@ -83,7 +83,7 @@ export const poiRepository = {
               s.id AS stop_id, s.name AS stop_name, s.modes AS stop_modes, s.lines AS stop_lines
        FROM pois p
        LEFT JOIN transit_stops s ON s.id = p.nearest_stop_id AND s.deleted_at IS NULL
-       WHERE p.id = $1 AND p.deleted_at IS NULL`,
+       WHERE p.id = $1 AND p.deleted_at IS NULL AND p.status = 'approved'`,
       [id],
     )
     return rows[0] ?? null

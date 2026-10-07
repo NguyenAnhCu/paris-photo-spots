@@ -1,0 +1,72 @@
+/* Pages outside the map layout: my posts, staff sign-in, review. */
+.standalone {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: calc(var(--edge) + env(safe-area-inset-top)) var(--edge) calc(40px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.standalone h1 {
+  margin: 8px 0 0;
+  font: 600 38px/1.1 var(--font-display);
+}
+.standalone h2 {
+  margin: 8px 0;
+  font: 600 24px/1.2 var(--font-display);
+}
+.standalone section {
+  width: 100%;
+}
+.standalone__form {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+.standalone__form .field {
+  width: 100%;
+}
+.my-posts__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.my-posts__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--tap-min);
+  padding: 8px 12px;
+  border-radius: var(--r-input);
+  background: var(--surface);
+}
+.my-posts__item a {
+  color: var(--ink);
+  font-weight: 500;
+  padding-block: 10px;
+}
+.my-posts__thumb {
+  width: 56px;
+  height: 42px;
+  border-radius: 8px;
+}
+.my-posts__status {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.my-posts__reason {
+  font-size: 13px;
+  color: var(--clay-ink);
+}

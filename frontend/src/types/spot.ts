@@ -20,6 +20,8 @@ export type CrowdLevel = 1 | 2 | 3 // 1 quiet · 2 moderate · 3 busy (set by th
 export const BEST_TIMES = ['sunrise', 'early_morning', 'midday', 'late_afternoon', 'sunset'] as const
 export type BestTime = (typeof BEST_TIMES)[number]
 
+export type ContentStatus = 'pending' | 'approved' | 'rejected' | 'hidden'
+
 export type SpotSummary = {
   id: string
   name: string
@@ -28,12 +30,15 @@ export type SpotSummary = {
   bestTime: BestTime | null
   coverThumbUrl: string | null
   photoCount: number
+  // The viewer's own spot still waiting for review (merged in from /me/submissions; never in the public list).
+  pending?: boolean
 }
 
 export type SpotCollection = FeatureCollection<Point, SpotSummary>
 
 export type SpotDetail = {
   id: string
+  status: ContentStatus
   name: string
   nameOriginal: string
   photoCategory: SpotCategory
@@ -69,6 +74,7 @@ export type CommunityPhoto = {
   iso: string | null
   camera: string | null
   createdAt: string
+  status: ContentStatus
 }
 
 export type Page<T> = { items: T[]; total: number; offset: number; limit: number; hasMore: boolean }

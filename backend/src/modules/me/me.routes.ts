@@ -14,6 +14,16 @@ meRouter.post('/terms', requireUser, async (req, res) => {
   res.json(await meService.acceptTerms(currentUser(req), AcceptTermsBody.parse(req.body).version))
 })
 
+// The participant's own posts with their review status: the public lists never include pending ones.
+meRouter.get('/submissions', requireUser, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store')
+  res.json(await meService.submissions(currentUser(req)))
+})
+
+meRouter.post('/notifications/seen', requireUser, async (req, res) => {
+  res.json(await meService.markNotificationsSeen(currentUser(req)))
+})
+
 meRouter.post('/update', requireUser, async (req, res) => {
   res.json(await meService.rename(currentUser(req), UpdateMeBody.parse(req.body).name))
 })

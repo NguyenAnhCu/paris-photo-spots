@@ -4,7 +4,7 @@ import { createApp } from '../../src/app.js'
 import { pool } from '../../src/db/pool.js'
 import { spotRepository } from '../../src/modules/spots/spot.repository.js'
 import { FAR_FROM_STATIONS, SPOTS } from '../fixtures/places.js'
-import { signIn, type Agent } from './auth.js'
+import { setRole, signIn, type Agent } from './auth.js'
 import { firstQueryOf, planNodes, resetDb, seedBulk, seedPlaces, type Seeded } from './db.js'
 
 const app = createApp()
@@ -15,6 +15,8 @@ beforeEach(async () => {
   await resetDb()
   seeded = await seedPlaces()
   author = await signIn(app)
+  // These tests are about creating spots/photos, not moderation (moderation.test.ts): a reviewer's posts are public at once.
+  await setRole(author, 'reviewer')
 })
 
 const VISIBLE = SPOTS.filter((s) => s.photoCategory && !s.deleted)

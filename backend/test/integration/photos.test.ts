@@ -7,7 +7,7 @@ import { createApp } from '../../src/app.js'
 import { pool } from '../../src/db/pool.js'
 import { STORAGE_ROOT } from '../../src/storage/photoStorage.js'
 import { hasGps, jpegRotatedPortrait, jpegWithGps, notAnImage, pngImage } from '../fixtures/images.js'
-import { signIn, type Agent } from './auth.js'
+import { setRole, signIn, type Agent } from './auth.js'
 import { resetDb, seedPlaces, type Seeded } from './db.js'
 
 const app = createApp()
@@ -20,6 +20,8 @@ beforeEach(async () => {
   await resetDb()
   seeded = await seedPlaces()
   author = await signIn(app)
+  // These tests are about creating spots/photos, not moderation (moderation.test.ts): a reviewer's posts are public at once.
+  await setRole(author, 'reviewer')
 })
 
 const upload = (file: Buffer | null, fields: Record<string, string>, type = 'image/jpeg', name = 'photo.jpg') => {

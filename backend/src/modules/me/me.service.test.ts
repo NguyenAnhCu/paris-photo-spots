@@ -16,6 +16,7 @@ function row(overrides: Partial<MeRow> = {}): MeRow {
     is_anonymous: true,
     role: 'participant',
     has_recovery_code: false,
+    unread_decisions: 0,
     terms_version: env.TERMS_VERSION,
     posting_suspended_until: null,
     ...overrides,

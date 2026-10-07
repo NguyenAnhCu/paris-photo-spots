@@ -66,6 +66,7 @@ describe('migrations', () => {
     'import_runs',
     'itineraries',
     'itinerary_stops',
+    'moderation_actions',
     'photos',
     'pois',
     'regions',

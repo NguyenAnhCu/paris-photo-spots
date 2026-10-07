@@ -26,6 +26,18 @@ export function useEnsurePoster() {
   }
 }
 
+// Reporting needs an identity but not the posting terms: create the anonymous one if there is none.
+export function useEnsureIdentity() {
+  const queryClient = useQueryClient()
+  const { locale } = useI18n()
+  return async (): Promise<void> => {
+    const me = await queryClient.fetchQuery({ queryKey: meKey, queryFn: () => authApi.me() })
+    if (me.user) return
+    await authApi.signInAnonymous(locale, await captchaToken())
+    queryClient.setQueryData(meKey, await authApi.me())
+  }
+}
+
 function useSetMe() {
   const queryClient = useQueryClient()
   return (me: MeResponse) => queryClient.setQueryData(meKey, me)
@@ -54,7 +66,9 @@ export function useSignOut() {
         termsVersion: old?.termsVersion ?? '',
         user: null,
       }))
-      queryClient.invalidateQueries()
+      // The signed-out person's own data goes now: refetching it before the UI re-renders would answer 401.
+      queryClient.removeQueries({ queryKey: ['me', 'submissions'] })
+      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
     },
   })
 }

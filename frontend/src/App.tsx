@@ -1,9 +1,15 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AccountProvider } from './components/account/AccountProvider'
 import { DevPage } from './pages/DevPage'
 import { MapLayout } from './pages/MapLayout'
 import { AddPhotoRoute, AddSpotRoute, ListRoute, SpotRoute } from './pages/routes'
+import { MyPostsPage } from './pages/MyPostsPage'
+import { StaffSignInPage } from './pages/StaffSignInPage'
 import { TermsPage } from './pages/TermsPage'
+
+// Staff only: a separate chunk participants never download.
+const ReviewPage = lazy(() => import('./pages/review/ReviewPage'))
 
 // URL = screen (design views list / detail / photos / add); filters live in ?cat=&q= (see useSpotFilters).
 export function App() {
@@ -18,6 +24,16 @@ export function App() {
           <Route path="add" element={<AddSpotRoute />} />
         </Route>
         <Route path="terms" element={<TermsPage />} />
+        <Route path="me/posts" element={<MyPostsPage />} />
+        <Route path="staff/sign-in" element={<StaffSignInPage />} />
+        <Route
+          path="review"
+          element={
+            <Suspense fallback={null}>
+              <ReviewPage />
+            </Suspense>
+          }
+        />
         {import.meta.env.DEV && <Route path="dev" element={<DevPage />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

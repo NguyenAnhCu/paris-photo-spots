@@ -1,5 +1,5 @@
-import { ArrowLeft, Camera, Clock, Cloud, Images, X } from 'lucide-react'
-import { useEffect } from 'react'
+import { ArrowLeft, Camera, Clock, Cloud, Flag, Images, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { mediaUrl } from '@/api/client'
 import { useSpot, useSpotPhotos, useWeather } from '@/hooks/useSpots'
 import { useI18n } from '@/i18n/useI18n'
@@ -9,6 +9,8 @@ import { formatCoords } from '@/lib/geo'
 import { useMapUi, useSpotNav } from '@/pages/mapUi'
 import type { SpotDetail as Spot } from '@/types/spot'
 import { IconButton, Photo, PillButton, StatTile, Tag } from '@/components/ui'
+import { ReportDialog } from '@/components/moderation/ReportDialog'
+import { StatusBanner } from '@/components/moderation/StatusBanner'
 import { ExifPills } from './ExifPills'
 import { CommunityPhotos } from './PhotoGallery'
 import { StateMessage } from './StateMessage'
@@ -39,9 +41,11 @@ function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) 
   const latest = photos.data?.pages[0]?.items ?? []
   const withExif = latest.find((p) => p.focal || p.aperture || p.shutter || p.iso)
   const stacked = layout === 'page'
+  const [reporting, setReporting] = useState(false)
 
   return (
     <>
+      <StatusBanner spotId={spot.id} status={spot.status} />
       {/* No crowd tile or hourly chart: hidden until real crowd data exists (the old values were simulated). */}
       <div className="detail__stats">
         <StatTile stacked={stacked} icon={Clock} label={t('detail.bestTime')} value={t(bestTimeKey(spot.bestTime))} />
@@ -77,8 +81,14 @@ function DetailBody({ spot, layout }: { spot: Spot; layout: 'panel' | 'page' }) 
           <PillButton variant="clay" icon={Camera} onClick={() => nav.toAddPhoto(spot.id)}>
             {t('detail.addPhoto')}
           </PillButton>
+          {spot.status === 'approved' && (
+            <PillButton variant="tonal" icon={Flag} onClick={() => setReporting(true)}>
+              {t('report.button')}
+            </PillButton>
+          )}
         </div>
       </div>
+      {reporting && <ReportDialog target={{ type: 'spot', id: spot.id }} onClose={() => setReporting(false)} />}
     </>
   )
 }

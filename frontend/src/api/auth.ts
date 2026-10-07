@@ -9,6 +9,7 @@ export type Me = {
   hasRecoveryCode: boolean
   termsAccepted: boolean
   postingSuspendedUntil: string | null
+  unreadDecisions: number
 }
 export type MeResponse = { user: Me | null; termsVersion: string }
 
