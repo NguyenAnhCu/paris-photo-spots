@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
-import { API_PORT, DATABASE_URL, STORAGE_DIR, WEB_PORT, WEB_URL } from './support/env.js'
+import { API_PORT, DATABASE_URL, MAGIC_LINK_LOG, STORAGE_DIR, WEB_PORT, WEB_URL } from './support/env.js'
 
 const CI = !!process.env.CI
 
@@ -66,6 +66,7 @@ export default defineConfig({
         AUTH_RATE_LIMIT_PER_MINUTE: '10000',
         QUOTA_ANON_SPOTS_PER_DAY: '1000',
         QUOTA_ANON_PHOTOS_PER_DAY: '1000',
+        AUTH_MAGIC_LINK_LOG: MAGIC_LINK_LOG,
       },
     },
     {

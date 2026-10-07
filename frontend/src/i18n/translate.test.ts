@@ -12,6 +12,7 @@ const SAME_IN_ALL_LANGUAGES = new Set<string>([
   'add.category',
   'exif.iso',
   'weather.value',
+  'staff.email', // "Email" is the usual Vietnamese word too
 ])
 
 describe('message catalogs', () => {

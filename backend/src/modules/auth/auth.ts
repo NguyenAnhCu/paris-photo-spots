@@ -3,7 +3,7 @@
 import { betterAuth, type BetterAuthPlugin } from 'better-auth'
 import { APIError, createAuthEndpoint, sessionMiddleware } from 'better-auth/api'
 import { setSessionCookie } from 'better-auth/cookies'
-import { anonymous, captcha } from 'better-auth/plugins'
+import { anonymous, captcha, magicLink } from 'better-auth/plugins'
 import { corsOrigins, env } from '../../config/env.js'
 import { pool } from '../../db/pool.js'
 import { logger } from '../../lib/logger.js'
@@ -118,6 +118,12 @@ export const auth = betterAuth({
         authService.onAnonymousLinked(anonymousUser.user.id, newUser.user.id),
     }),
     recoveryCode(),
+    // Staff only for now: accounts are created by an admin (no self sign-up through a link).
+    magicLink({
+      disableSignUp: true,
+      expiresIn: 15 * 60,
+      sendMagicLink: ({ email, url }) => authService.deliverMagicLink(email, url),
+    }),
     ...turnstile,
   ],
 })

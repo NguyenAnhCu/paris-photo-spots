@@ -10,9 +10,11 @@ import { originCheck } from './middleware/originCheck.js'
 import { authRouter } from './modules/auth/auth.routes.js'
 import { healthRouter } from './modules/health/health.routes.js'
 import { meRouter } from './modules/me/me.routes.js'
+import { moderationRouter } from './modules/moderation/moderation.routes.js'
 import { photoRouter } from './modules/photos/photo.routes.js'
 import { poiRouter } from './modules/pois/poi.routes.js'
 import { regionRouter } from './modules/regions/region.routes.js'
+import { reportsRouter } from './modules/reports/reports.routes.js'
 import { spotRouter } from './modules/spots/spot.routes.js'
 import { tileRouter } from './modules/tiles/tile.routes.js'
 import { MEDIA_URL_PREFIX, STORAGE_ROOT } from './storage/photoStorage.js'
@@ -37,6 +39,8 @@ export function createApp() {
   api.use('/regions', regionRouter)
   api.use('/spots', spotRouter)
   api.use('/photos', photoRouter)
+  api.use('/reports', reportsRouter)
+  api.use('/moderation', moderationRouter)
   app.use('/api/v1', api)
 
   app.use('/tiles', tileRouter)

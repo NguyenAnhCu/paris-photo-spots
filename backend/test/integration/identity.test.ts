@@ -127,7 +127,8 @@ describe('ownership and names', () => {
     expect(photo.author_name).toBe(me.name)
 
     await agent.post('/api/v1/me/update').send({ name: '  Linh   Nguyễn ' }).expect(200)
-    const list = await request(app).post('/api/v1/photos/list').send({ spot_id: spot.id }).expect(200)
+    // Still waiting for review: the author sees it.
+    const list = await agent.post('/api/v1/photos/list').send({ spot_id: spot.id }).expect(200)
     expect(list.body.items[0].author_name).toBe('Linh Nguyễn')
   })
 

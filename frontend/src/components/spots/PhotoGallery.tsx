@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flag, LayoutGrid } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { mediaUrl } from '@/api/client'
 import { useSpotPhotos } from '@/hooks/useSpots'
@@ -7,7 +7,10 @@ import { translateApiError } from '@/i18n/apiError'
 import { relativeTime } from '@/lib/time'
 import type { SpotDetail } from '@/types/spot'
 import { IconButton, Photo, PillButton, Tag } from '@/components/ui'
+import { ReportDialog } from '@/components/moderation/ReportDialog'
+import type { MessageKey } from '@/i18n/messages/vi'
 import { ExifPills } from './ExifPills'
+import '@/components/moderation/moderation.css'
 import { StateMessage } from './StateMessage'
 import './PhotoGallery.css'
 
@@ -20,11 +23,14 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
   const total = data?.pages[0]?.total ?? spot.photoCount
   const [index, setIndex] = useState<number | null>(null)
   const current = index !== null ? photos[index] : undefined
+  const [reporting, setReporting] = useState<string | null>(null)
 
   // ←/→ browse, Esc back to the grid (the panel's own Esc then closes the spot).
   useEffect(() => {
     if (index === null) return
     const onKey = (e: KeyboardEvent) => {
+      // A dialog over the viewer (report) owns the keyboard.
+      if (document.querySelector('[role="dialog"]')) return
       if (e.key === 'ArrowLeft') setIndex((i) => (i === null ? i : (i + photos.length - 1) % photos.length))
       if (e.key === 'ArrowRight') setIndex((i) => (i === null ? i : (i + 1) % photos.length))
       if (e.key === 'Escape') {
@@ -61,6 +67,11 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
             <div className="viewer__who">
               <b>{current.authorName || t('photos.anonymous')}</b>
               <span>{relativeTime(current.createdAt, locale)}</span>
+              {current.status !== 'approved' && (
+                <span className={`status-chip status-chip--${current.status}`}>
+                  {t(`status.${current.status}` as MessageKey)}
+                </span>
+              )}
             </div>
             <div className="viewer__nav">
               <IconButton
@@ -79,6 +90,11 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
             </div>
           </div>
           <ExifPills photo={current} />
+          {current.status === 'approved' && (
+            <PillButton variant="tonal" icon={Flag} onClick={() => setReporting(current.id)} className="viewer__report">
+              {t('report.photo')}
+            </PillButton>
+          )}
         </div>
       ) : (
         <div className="gallery__grid" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
@@ -91,6 +107,11 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
               aria-label={t('photos.open', { index: i + 1 })}
             >
               <Photo src={mediaUrl(p.thumbUrl)} alt="" className="gallery__thumb" />
+              {p.status !== 'approved' && (
+                <span className={`status-chip status-chip--${p.status} gallery__status`}>
+                  {t(`status.${p.status}` as MessageKey)}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -101,6 +122,7 @@ export function CommunityPhotos({ spot, columns }: { spot: SpotDetail; columns: 
           {isFetchingNextPage ? t('common.loading') : t('photos.loadMore')}
         </PillButton>
       )}
+      {reporting && <ReportDialog target={{ type: 'photo', id: reporting }} onClose={() => setReporting(null)} />}
     </div>
   )
 }

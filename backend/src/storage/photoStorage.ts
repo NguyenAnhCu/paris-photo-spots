@@ -17,6 +17,7 @@ export const MEDIA_URL_PREFIX = '/media'
 const PIXEL_LIMIT_ERROR = /exceeds pixel limit/i
 
 export type StoredPhoto = { fileName: string; thumbName: string; width: number; height: number }
+// The thumbnail bytes come back too: small, already decoded once, enough for image hashing (no second full decode).
 
 // Re-encodes to JPEG, which (a) strips all metadata — sharp drops EXIF/GPS unless asked to keep it, so a photo
 // never leaks where the uploader lives — and (b) proves the bytes really are an image whatever the MIME header said.
@@ -35,7 +36,7 @@ async function encode(input: Buffer) {
   return { full, thumb }
 }
 
-export async function savePhoto(input: Buffer): Promise<StoredPhoto> {
+export async function savePhoto(input: Buffer): Promise<StoredPhoto & { thumb: Buffer }> {
   let encoded: Awaited<ReturnType<typeof encode>>
   try {
     encoded = await encode(input)
@@ -65,7 +66,7 @@ export async function savePhoto(input: Buffer): Promise<StoredPhoto> {
     await removePhoto(stored)
     throw err
   }
-  return stored
+  return { ...stored, thumb }
 }
 
 // Best-effort cleanup when a write or the DB insert fails after files were written; a leftover file is harmless but logged.

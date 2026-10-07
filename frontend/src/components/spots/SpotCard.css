@@ -115,3 +115,9 @@
   gap: 6px;
   flex-wrap: wrap;
 }
+
+/* The author's own spot still waiting for review (only they see it in the list). */
+.spot-card__pending {
+  align-self: flex-start;
+  margin-top: 6px;
+}

@@ -1,0 +1,36 @@
+.status-banner {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--r-input);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.45;
+  background: var(--tile-bg);
+  color: var(--tonal-fg);
+}
+.status-banner--rejected,
+.status-banner--hidden {
+  background: var(--clay-chip);
+  color: var(--clay-ink);
+}
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--tile-bg);
+  color: var(--tonal-fg);
+}
+.status-chip--rejected,
+.status-chip--hidden {
+  background: var(--clay-chip);
+  color: var(--clay-ink);
+}
+.status-chip--approved {
+  background: var(--accent-100);
+  color: var(--accent-800);
+}

@@ -17,3 +17,5 @@ export const DATABASE_URL = process.env.E2E_DATABASE_URL ?? 'postgres://pmv:pmv@
 export const TMP_DIR = path.join(os.tmpdir(), 'pmv-e2e')
 export const STORAGE_DIR = path.join(TMP_DIR, 'storage')
 export const IMAGES_DIR = path.join(TMP_DIR, 'images')
+// Staff sign-in links: the backend writes them here (no email service in tests).
+export const MAGIC_LINK_LOG = path.join(TMP_DIR, 'magic-links.jsonl')

@@ -23,6 +23,13 @@ const EnvSchema = z.object({
   QUOTA_ANON_PHOTOS_PER_DAY: z.coerce.number().int().positive().default(10),
   QUOTA_ANON_SPOTS_PER_DAY: z.coerce.number().int().positive().default(3),
   QUOTA_LINKED_MULTIPLIER: z.coerce.number().int().positive().default(3),
+  // Moderation: a linked participant's posts go public at once after this many approved posts, unless something of
+  // theirs was rejected in the last TRUST_WINDOW_DAYS days. Reviewers may suspend posting for up to this many days.
+  TRUST_MIN_APPROVED: z.coerce.number().int().nonnegative().default(3),
+  TRUST_WINDOW_DAYS: z.coerce.number().int().positive().default(30),
+  REVIEWER_SUSPEND_MAX_DAYS: z.coerce.number().int().positive().default(7),
+  // Staff sign-in links (magic link). No email service yet: dev and E2E append each link to this file instead.
+  AUTH_MAGIC_LINK_LOG: z.string().default(''),
   MAX_RADIUS_M: z.coerce.number().int().positive().default(5000),
   MAX_RESULTS: z.coerce.number().int().positive().default(500),
   MAX_POLYGON_VERTICES: z.coerce.number().int().positive().default(1000),

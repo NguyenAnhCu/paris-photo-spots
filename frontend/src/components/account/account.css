@@ -24,6 +24,22 @@
   outline: none;
   box-shadow: var(--focus-ring);
 }
+.account-menu__button {
+  position: relative;
+}
+.account-menu__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--clay-dark);
+  color: var(--white);
+  font: 700 12px/20px var(--font-body);
+  text-align: center;
+}
 .account-menu__name {
   max-width: 140px;
   overflow: hidden;

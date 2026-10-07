@@ -57,7 +57,7 @@ describe('AccountMenu', () => {
       within(menu)
         .getAllByRole('menuitem')
         .map((i) => i.textContent),
-    ).toEqual([t('account.rename'), t('account.recoveryCode'), t('account.signOut')])
+    ).toEqual([t('account.myPosts'), t('account.rename'), t('account.recoveryCode'), t('account.signOut')])
   })
 
   it('sign out without a saved code warns first and offers to save the code', async () => {

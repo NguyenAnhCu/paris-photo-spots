@@ -30,6 +30,7 @@ export type Me = {
   has_recovery_code: boolean
   terms_accepted: boolean
   posting_suspended_until: string | null
+  unread_decisions: number
 }
 
 export async function meOf(agent: Agent): Promise<Me> {
