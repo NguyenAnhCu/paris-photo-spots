@@ -13,6 +13,7 @@ const { env } = await import('../../src/config/env.js')
 const { pool } = await import('../../src/db/pool.js')
 const { resetDb } = await import('./db.js')
 const { meOf } = await import('./auth.js')
+const { setUserRole } = await import('../../db/admin/userRole.js')
 
 const app = createApp()
 
@@ -44,6 +45,21 @@ describe('staff sign-in link', () => {
     const res = await agent.get(link.pathname + link.search).expect(302)
     expect(res.headers.location).toBe(`${env.PUBLIC_ORIGIN}/review`)
     expect(await meOf(agent)).toMatchObject({ name: 'Linh', role: 'reviewer', is_anonymous: false })
+  })
+
+  it('the first admin made with user:role signs in by link, whatever the case of the email typed', async () => {
+    await setUserRole(' NaCu@Example.com ', 'admin', 'nacu')
+    const agent = request.agent(app)
+    await agent
+      .post('/api/auth/sign-in/magic-link')
+      .set('Origin', env.PUBLIC_ORIGIN)
+      .send({ email: 'Nacu@example.COM', callbackURL: '/admin' })
+      .expect(200)
+    const link = await lastLink('nacu@example.com')
+    const res = await agent.get(link.pathname + link.search).expect(302)
+    expect(res.headers.location).toBe(`${env.PUBLIC_ORIGIN}/admin`)
+    expect(await meOf(agent)).toMatchObject({ name: 'nacu', role: 'admin', is_anonymous: false })
+    await agent.post('/api/v1/admin/users/list').set('Origin', env.PUBLIC_ORIGIN).send({}).expect(200)
   })
 
   it('an unknown email gets no account (no sign-up through links)', async () => {

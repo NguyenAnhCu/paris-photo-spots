@@ -54,6 +54,8 @@ export const authService = {
   // Sign-in links for staff. There is no email service yet (it comes with sign-in for participants): dev and E2E
   // write each link to AUTH_MAGIC_LINK_LOG; production refuses rather than pretending a mail was sent.
   async deliverMagicLink(email: string, url: string): Promise<void> {
+    // Accounts are looked up case-insensitively; send to (and log) the same normalised address.
+    email = email.trim().toLowerCase()
     if (env.AUTH_MAGIC_LINK_LOG) {
       await appendFile(env.AUTH_MAGIC_LINK_LOG, `${JSON.stringify({ email, url, at: new Date().toISOString() })}\n`)
       return
