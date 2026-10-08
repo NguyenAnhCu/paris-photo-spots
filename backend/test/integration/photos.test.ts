@@ -7,20 +7,25 @@ import { createApp } from '../../src/app.js'
 import { pool } from '../../src/db/pool.js'
 import { STORAGE_ROOT } from '../../src/storage/photoStorage.js'
 import { hasGps, jpegRotatedPortrait, jpegWithGps, notAnImage, pngImage } from '../fixtures/images.js'
+import { setRole, signIn, type Agent } from './auth.js'
 import { resetDb, seedPlaces, type Seeded } from './db.js'
 
 const app = createApp()
 const PHOTOS_DIR = path.join(STORAGE_ROOT, 'photos')
 const storedFiles = () => readdir(PHOTOS_DIR).catch(() => [] as string[])
 let seeded: Seeded
+let author: Agent
 
 beforeEach(async () => {
   await resetDb()
   seeded = await seedPlaces()
+  author = await signIn(app)
+  // These tests are about creating spots/photos, not moderation (moderation.test.ts): a reviewer's posts are public at once.
+  await setRole(author, 'reviewer')
 })
 
 const upload = (file: Buffer | null, fields: Record<string, string>, type = 'image/jpeg', name = 'photo.jpg') => {
-  const req = request(app).post('/api/v1/photos')
+  const req = author.post('/api/v1/photos')
   for (const [k, v] of Object.entries(fields)) req.field(k, v)
   return file ? req.attach('file', file, { filename: name, contentType: type }) : req
 }
@@ -32,7 +37,6 @@ describe('POST /api/v1/photos', () => {
 
     const res = await upload(original, {
       spot_id: seeded.spot.eiffel,
-      author_name: '  Linh ',
       focal: '35mm',
       aperture: 'f/1.8',
       shutter: '1/250s',
@@ -43,7 +47,8 @@ describe('POST /api/v1/photos', () => {
       spot_id: seeded.spot.eiffel,
       width: 2048,
       height: 1365,
-      author_name: 'Linh',
+      // The uploader's identity, not a typed name.
+      author_name: expect.stringMatching(/^Lữ khách \d{4}$/),
       focal: '35mm',
       camera: 'Sony ILCE-7M4',
       url: expect.stringMatching(/^\/media\/photos\/[0-9a-f-]{36}\.jpg$/),
@@ -79,11 +84,11 @@ describe('POST /api/v1/photos', () => {
   it('stores blank optional fields as NULL', async () => {
     const res = await upload(
       await pngImage(),
-      { spot_id: seeded.spot.eiffel, author_name: '   ', camera: '' },
+      { spot_id: seeded.spot.eiffel, focal: '   ', camera: '' },
       'image/png',
     ).expect(201)
-    const { rows } = await pool.query(`SELECT author_name, camera FROM photos WHERE id = $1`, [res.body.id])
-    expect(rows[0]).toEqual({ author_name: null, camera: null })
+    const { rows } = await pool.query(`SELECT focal, camera FROM photos WHERE id = $1`, [res.body.id])
+    expect(rows[0]).toEqual({ focal: null, camera: null })
   })
 
   it.each([

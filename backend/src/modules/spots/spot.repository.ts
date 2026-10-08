@@ -1,4 +1,5 @@
 import { pool, withTransaction } from '../../db/pool.js'
+import type { ContentStatus } from '../../lib/moderation.js'
 import type { PhotoCategory } from './spot.schemas.js'
 
 export type SpotRow = {
@@ -16,27 +17,35 @@ export type SpotRow = {
   cover_photo_attribution: string | null
   photo_count: number
   source: string
+  status: ContentStatus
+  created_by: string | null
 }
 
 // Transaction-scoped advisory lock key (any constant bigint, unique within this database).
 const CREATE_USER_SPOT_LOCK = 7_301_001
 
-// photo_count via a grouped subquery: one pass over photos instead of one count per spot.
+// photo_count via a grouped subquery: one pass over photos instead of one count per spot. Only approved photos count:
+// the number is public.
 const SPOT_SELECT = `
-  SELECT p.id, p.name, p.name_i18n, p.photo_category, p.crowd_level, p.best_time, p.tip, p.source,
+  SELECT p.id, p.name, p.name_i18n, p.photo_category, p.crowd_level, p.best_time, p.tip, p.source, p.status, p.created_by,
          ST_X(p.geom) AS lng, ST_Y(p.geom) AS lat,
          p.cover_photo_url, p.cover_photo_page_url, p.cover_photo_attribution,
          COALESCE(ph.n, 0)::int AS photo_count
   FROM pois p
-  LEFT JOIN (SELECT poi_id, count(*) AS n FROM photos WHERE deleted_at IS NULL GROUP BY poi_id) ph ON ph.poi_id = p.id
+  LEFT JOIN (SELECT poi_id, count(*) AS n FROM photos WHERE deleted_at IS NULL AND status = 'approved' GROUP BY poi_id) ph
+    ON ph.poi_id = p.id
   WHERE p.deleted_at IS NULL AND p.photo_category IS NOT NULL`
 
 export const spotRepository = {
   async listAll(): Promise<SpotRow[]> {
-    const { rows } = await pool.query<SpotRow>(`${SPOT_SELECT} ORDER BY p.popularity DESC NULLS LAST, p.name`)
+    // The public list: approved only (a participant's own pending spots come from /me/submissions).
+    const { rows } = await pool.query<SpotRow>(
+      `${SPOT_SELECT} AND p.status = 'approved' ORDER BY p.popularity DESC NULLS LAST, p.name`,
+    )
     return rows
   },
 
+  // Any status: the service decides who may see a spot that is not approved.
   async byId(id: string): Promise<SpotRow | null> {
     const { rows } = await pool.query<SpotRow>(`${SPOT_SELECT} AND p.id = $1`, [id])
     return rows[0] ?? null
@@ -46,6 +55,8 @@ export const spotRepository = {
   // are computed right away (same rule as the import's postprocess.sql) so the spot is ready for the future routing
   // feature. source_ref = id keeps the (source, source_ref) unique index meaningful.
   async insertUserSpotUnlessDuplicate(input: {
+    createdBy: string
+    status: ContentStatus
     name: string
     photoCategory: PhotoCategory
     lng: number
@@ -61,22 +72,33 @@ export const spotRepository = {
       // check (20 parallel posts created up to 20 spots). User spots are rare: one lock for all of them is enough,
       // and unlike a per-area lock it cannot miss two points on either side of an area boundary.
       await client.query('SELECT pg_advisory_xact_lock($1)', [CREATE_USER_SPOT_LOCK])
+      // Compared with public spots and the author's own: someone else's pending spot must not leak through the 409.
       const { rows: near } = await client.query<{ id: string; name: string }>(
         `SELECT id, name FROM pois
          WHERE deleted_at IS NULL AND photo_category IS NOT NULL
+           AND (status = 'approved' OR created_by = $4)
            AND ST_DWithin(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography, $3)
          ORDER BY geom::geography <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
          LIMIT 1`,
-        [input.lng, input.lat, input.duplicateRadiusM],
+        [input.lng, input.lat, input.duplicateRadiusM, input.createdBy],
       )
       if (near[0]) return { duplicate: near[0] }
 
       // Two statements: a data-modifying CTE cannot UPDATE the row its own INSERT created (same snapshot).
       const { rows } = await client.query<{ id: string }>(
-        `INSERT INTO pois (source, name, category, photo_category, tip, name_i18n, crowd_level, geom)
-         VALUES ('user', $1, 'user_spot', $2, $3, $4::jsonb, 2, ST_SetSRID(ST_MakePoint($5, $6), 4326))
+        `INSERT INTO pois (source, name, category, photo_category, tip, name_i18n, crowd_level, created_by, status, geom)
+         VALUES ('user', $1, 'user_spot', $2, $3, $4::jsonb, 2, $7, $8, ST_SetSRID(ST_MakePoint($5, $6), 4326))
          RETURNING id`,
-        [input.name, input.photoCategory, input.tip, JSON.stringify(input.nameI18n), input.lng, input.lat],
+        [
+          input.name,
+          input.photoCategory,
+          input.tip,
+          JSON.stringify(input.nameI18n),
+          input.lng,
+          input.lat,
+          input.createdBy,
+          input.status,
+        ],
       )
       const id = rows[0]?.id
       if (!id) throw new Error('Spot insert returned no id')

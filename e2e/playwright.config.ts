@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
-import { API_PORT, DATABASE_URL, STORAGE_DIR, WEB_PORT, WEB_URL } from './support/env.js'
+import { API_PORT, AUTH_SECRET, DATABASE_URL, STORAGE_DIR, WEB_PORT, WEB_URL } from './support/env.js'
 
 const CI = !!process.env.CI
 
@@ -47,9 +47,10 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'npx tsx src/server.ts',
+      // Database first (created if missing, migrated), then the server: see prepare-db.ts.
+      command: 'npx tsx ../e2e/prepare-db.ts && npx tsx src/server.ts',
       cwd: '../backend',
-      // The port, not a URL: the health check needs the database, which global setup may create after this starts.
+      // The port, not a URL: the health check needs the database.
       port: API_PORT,
       reuseExistingServer: false,
       timeout: 60_000,
@@ -58,9 +59,14 @@ export default defineConfig({
         PORT: String(API_PORT),
         DATABASE_URL,
         CORS_ORIGINS: WEB_URL,
-        JWT_SECRET: 'e2e-only-secret-not-used-anywhere-else',
+        BETTER_AUTH_SECRET: AUTH_SECRET,
+        PUBLIC_ORIGIN: WEB_URL,
         STORAGE_DIR,
         WRITE_RATE_LIMIT: '10000',
+        // Every spec creates anonymous identities from 127.0.0.1.
+        AUTH_RATE_LIMIT_PER_MINUTE: '10000',
+        QUOTA_ANON_SPOTS_PER_DAY: '1000',
+        QUOTA_ANON_PHOTOS_PER_DAY: '1000',
       },
     },
     {

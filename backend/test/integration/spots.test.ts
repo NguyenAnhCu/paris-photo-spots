@@ -4,14 +4,19 @@ import { createApp } from '../../src/app.js'
 import { pool } from '../../src/db/pool.js'
 import { spotRepository } from '../../src/modules/spots/spot.repository.js'
 import { FAR_FROM_STATIONS, SPOTS } from '../fixtures/places.js'
+import { setRole, signIn, type Agent } from './auth.js'
 import { firstQueryOf, planNodes, resetDb, seedBulk, seedPlaces, type Seeded } from './db.js'
 
 const app = createApp()
 let seeded: Seeded
+let author: Agent
 
 beforeEach(async () => {
   await resetDb()
   seeded = await seedPlaces()
+  author = await signIn(app)
+  // These tests are about creating spots/photos, not moderation (moderation.test.ts): a reviewer's posts are public at once.
+  await setRole(author, 'reviewer')
 })
 
 const VISIBLE = SPOTS.filter((s) => s.photoCategory && !s.deleted)
@@ -55,7 +60,7 @@ describe('GET /api/v1/spots', () => {
     const etag = first.headers.etag as string
     await request(app).get('/api/v1/spots').set('If-None-Match', etag).expect(304)
 
-    await request(app)
+    await author
       .post('/api/v1/spots')
       .send({ name: 'Square du Vert-Galant', photo_category: 'park', lng: 2.3387, lat: 48.8575 })
       .expect(201)
@@ -107,7 +112,7 @@ describe('POST /api/v1/spots', () => {
   const body = { name: '  Quai de Bourbon ', photo_category: 'street', lng: 2.3553, lat: 48.8527, lang: 'fr' }
 
   it('creates the spot (trimmed name, localized for the author language) with the nearest station', async () => {
-    const res = await request(app).post('/api/v1/spots').send(body).expect(201)
+    const res = await author.post('/api/v1/spots').send(body).expect(201)
     expect(res.body).toMatchObject({
       name: 'Quai de Bourbon',
       photo_category: 'street',
@@ -131,7 +136,7 @@ describe('POST /api/v1/spots', () => {
 
   it('leaves walk_minutes empty when the nearest station is beyond walking distance', async () => {
     const [lng, lat] = FAR_FROM_STATIONS
-    const res = await request(app)
+    const res = await author
       .post('/api/v1/spots')
       .send({ ...body, lng, lat })
       .expect(201)
@@ -141,7 +146,7 @@ describe('POST /api/v1/spots', () => {
   })
 
   it('409 SPOT_DUPLICATE within 30 m of a visible spot, with the existing id', async () => {
-    const res = await request(app)
+    const res = await author
       .post('/api/v1/spots')
       .send({ ...body, lng: 2.2947, lat: 48.8585 }) // ~17 m from the Eiffel Tower fixture
       .expect(409)
@@ -149,11 +154,11 @@ describe('POST /api/v1/spots', () => {
   })
 
   it('ignores hidden and deleted POIs when checking duplicates', async () => {
-    await request(app)
+    await author
       .post('/api/v1/spots')
       .send({ ...body, lng: 2.3501, lat: 48.86 })
       .expect(201) // deleted fixture
-    await request(app)
+    await author
       .post('/api/v1/spots')
       .send({ ...body, lng: 2.2977, lat: 48.8609 })
       .expect(201) // quai Branly
@@ -164,7 +169,7 @@ describe('POST /api/v1/spots', () => {
   it('lets only one of many simultaneous posts at the same place through', async () => {
     const statuses = await Promise.all(
       Array.from({ length: 20 }, () =>
-        request(app)
+        author
           .post('/api/v1/spots')
           .send({ ...body, lng: 2.3012, lat: 48.8738 })
           .then((r) => r.status),
@@ -175,12 +180,12 @@ describe('POST /api/v1/spots', () => {
   })
 
   it('400 OUT_OF_AREA outside Île-de-France, 400 VALIDATION_ERROR for bad input, nothing written', async () => {
-    const out = await request(app)
+    const out = await author
       .post('/api/v1/spots')
       .send({ ...body, lng: 4.8357, lat: 45.764 })
       .expect(400) // Lyon
     expect(out.body.error.code).toBe('OUT_OF_AREA')
-    const bad = await request(app)
+    const bad = await author
       .post('/api/v1/spots')
       .send({ ...body, name: 'ab', photo_category: 'beach' })
       .expect(400)
@@ -191,11 +196,7 @@ describe('POST /api/v1/spots', () => {
   })
 
   it('400 INVALID_JSON for a malformed body', async () => {
-    const res = await request(app)
-      .post('/api/v1/spots')
-      .set('Content-Type', 'application/json')
-      .send('{"name":')
-      .expect(400)
+    const res = await author.post('/api/v1/spots').set('Content-Type', 'application/json').send('{"name":').expect(400)
     expect(res.body.error.code).toBe('INVALID_JSON')
   })
 })

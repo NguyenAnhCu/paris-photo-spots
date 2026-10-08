@@ -2,6 +2,7 @@ import { useI18n } from '@/i18n/useI18n'
 import { bestTimeKey, categoryLabelKey } from '@/i18n/keys'
 import type { SpotSummary } from '@/types/spot'
 import { Photo, Tag } from '@/components/ui'
+import '@/components/moderation/moderation.css'
 import './SpotCard.css'
 
 type SpotCardProps = {
@@ -34,6 +35,7 @@ export function SpotCard({ spot, variant, active, onOpen, onHover }: SpotCardPro
           <span className="spot-card__name">{spot.name}</span>
           {/* Most imported spots have no curated best time: show the category alone rather than "Giờ đẹp: Chưa rõ". */}
           <span className="spot-card__meta">{spot.bestTime ? t('card.meta', { category, time: best }) : category}</span>
+          {spot.pending && <span className="status-chip spot-card__pending">{t('status.pending')}</span>}
         </span>
       </button>
     )
@@ -49,9 +51,10 @@ export function SpotCard({ spot, variant, active, onOpen, onHover }: SpotCardPro
       </span>
       <span className="spot-card__body">
         <span className="spot-card__name">{spot.name}</span>
-        {spot.bestTime && (
+        {(spot.bestTime || spot.pending) && (
           <span className="spot-card__tags">
-            <Tag tone="neutral">{best}</Tag>
+            {spot.pending && <span className="status-chip">{t('status.pending')}</span>}
+            {spot.bestTime && <Tag tone="neutral">{best}</Tag>}
           </span>
         )}
       </span>

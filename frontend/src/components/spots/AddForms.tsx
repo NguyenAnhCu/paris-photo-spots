@@ -1,6 +1,7 @@
 import { ArrowLeft, MapPin } from 'lucide-react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { ApiError } from '@/api/client'
+import { useEnsurePoster, useMe } from '@/hooks/useMe'
 import { useCreateSpot, useSpot, useUploadPhoto } from '@/hooks/useSpots'
 import { useI18n } from '@/i18n/useI18n'
 import { translateApiError } from '@/i18n/apiError'
@@ -10,6 +11,8 @@ import { parseExif } from '@/lib/exif'
 import { formatCoords } from '@/lib/geo'
 import { useMapUi, useSpotNav } from '@/pages/mapUi'
 import { SPOT_CATEGORIES, type ExifSummary, type SpotCategory } from '@/types/spot'
+import { useAccountUi } from '@/components/account/accountUi'
+import { IdentityStrip } from '@/components/account/IdentityStrip'
 import { PillButton } from '@/components/ui'
 import './AddForms.css'
 
@@ -110,20 +113,21 @@ function ExifStep({ draft }: { draft: ReturnType<typeof usePhotoDraft> }) {
   )
 }
 
-function AuthorField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const { t } = useI18n()
-  return (
-    <label className="field">
-      <span className="field__label">{t('add.author')}</span>
-      <input
-        className="input"
-        value={value}
-        maxLength={60}
-        onChange={(e) => onChange(e.target.value)}
-        autoComplete="nickname"
-      />
-    </label>
-  )
+// Identity + terms before posting. The first post creates the anonymous identity; afterwards, a participant without a
+// recovery code is offered one (the account dialogs outlive the form, see AccountProvider).
+function usePosting() {
+  const me = useMe().data?.user
+  const ensurePoster = useEnsurePoster()
+  const ui = useAccountUi()
+  const [termsChecked, setTermsChecked] = useState(false)
+  return {
+    termsOk: Boolean(me?.termsAccepted) || termsChecked,
+    strip: <IdentityStrip termsChecked={termsChecked} onTermsChange={setTermsChecked} />,
+    ensurePoster,
+    afterPost: (hasRecoveryCode: boolean) => {
+      if (!hasRecoveryCode) ui.open('recovery-show')
+    },
+  }
 }
 
 function FormShell({
@@ -189,7 +193,7 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
   const [name, setName] = useState('')
   const [category, setCategory] = useState<SpotCategory>('landmark')
   const [tip, setTip] = useState('')
-  const [author, setAuthor] = useState('')
+  const posting = usePosting()
   const [error, setError] = useState<{ text: string; existingId?: string } | null>(null)
   const nameId = useId()
 
@@ -203,7 +207,7 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
   }, [category, setPlacement])
 
   const position = placement?.position ?? null
-  const canSubmit = Boolean(position && name.trim()) && !createSpot.isPending && !upload.isPending
+  const canSubmit = Boolean(position && name.trim()) && posting.termsOk && !createSpot.isPending && !upload.isPending
   const locationText = position
     ? formatCoords(position[1], position[0]) + (layout === 'panel' ? ` · ${t('add.locationChangeHint')}` : '')
     : layout === 'panel'
@@ -214,6 +218,7 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
     if (!position) return
     setError(null)
     try {
+      const { user } = await posting.ensurePoster()
       const spot = await createSpot.mutateAsync({
         name: name.trim(),
         photoCategory: category,
@@ -226,7 +231,6 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
           await upload.mutateAsync({
             spotId: spot.id,
             file: draft.file,
-            authorName: author.trim() || undefined,
             exif: exifPayload(draft.exif),
           })
         } catch (uploadErr) {
@@ -236,6 +240,7 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
         }
       }
       nav.toSpot(spot.id, { replace: true }) // design: after posting, open the new spot
+      posting.afterPost(Boolean(user?.hasRecoveryCode))
     } catch (err) {
       const existingId =
         err instanceof ApiError && err.code === 'SPOT_DUPLICATE'
@@ -247,6 +252,7 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
 
   return (
     <FormShell layout={layout} title={t('add.title')} onCancel={nav.toList}>
+      {posting.strip}
       <div className="add__box add__box--dashed add__location">
         <MapPin
           size={28}
@@ -297,7 +303,6 @@ export function AddSpotForm({ layout }: { layout: 'panel' | 'page' }) {
           onChange={(e) => setTip(e.target.value)}
         />
       </label>
-      {draft.file && <AuthorField value={author} onChange={setAuthor} />}
       {error && (
         <FormError>
           <span>{error.text}</span>
@@ -321,20 +326,17 @@ export function AddPhotoForm({ spotId, layout }: { spotId: string; layout: 'pane
   const { data: spot } = useSpot(spotId)
   const draft = usePhotoDraft()
   const upload = useUploadPhoto()
-  const [author, setAuthor] = useState('')
+  const posting = usePosting()
   const [error, setError] = useState<string | null>(null)
 
   const submit = async () => {
     if (!draft.file) return
     setError(null)
     try {
-      await upload.mutateAsync({
-        spotId,
-        file: draft.file,
-        authorName: author.trim() || undefined,
-        exif: exifPayload(draft.exif),
-      })
+      const { user } = await posting.ensurePoster()
+      await upload.mutateAsync({ spotId, file: draft.file, exif: exifPayload(draft.exif) })
       nav.toPhotos(spotId)
+      posting.afterPost(Boolean(user?.hasRecoveryCode))
     } catch (err) {
       setError(translateApiError(err, t))
     }
@@ -347,11 +349,17 @@ export function AddPhotoForm({ spotId, layout }: { spotId: string; layout: 'pane
           {spot.name}
         </PillButton>
       )}
+      {posting.strip}
       <PhotoStep draft={draft} />
       <ExifStep draft={draft} />
-      <AuthorField value={author} onChange={setAuthor} />
       {error && <FormError>{error}</FormError>}
-      <PillButton variant="clay" size="lg" block disabled={!draft.file || upload.isPending} onClick={submit}>
+      <PillButton
+        variant="clay"
+        size="lg"
+        block
+        disabled={!draft.file || !posting.termsOk || upload.isPending}
+        onClick={submit}
+      >
         {upload.isPending ? t('add.submitting') : t('add.submitPhoto')}
       </PillButton>
     </FormShell>

@@ -33,7 +33,9 @@ export async function prepareDatabase(): Promise<void> {
 
 export async function resetAndSeed(): Promise<void> {
   await withClient(DATABASE_URL, async (client) => {
-    await client.query('TRUNCATE pois, photos, transit_stops, regions, import_runs')
+    await client.query(
+      'TRUNCATE pois, photos, transit_stops, regions, import_runs, users, auth_sessions, auth_accounts, auth_verifications, moderation_actions, reports',
+    )
     for (const s of STOPS) {
       await client.query(
         `INSERT INTO transit_stops (gtfs_stop_id, name, modes, lines, navigo_zone, geom)

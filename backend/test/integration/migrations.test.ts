@@ -60,9 +60,13 @@ afterAll(async () => {
 
 describe('migrations', () => {
   const ALL_TABLES = [
+    'auth_accounts',
+    'auth_sessions',
+    'auth_verifications',
     'import_runs',
     'itineraries',
     'itinerary_stops',
+    'moderation_actions',
     'photos',
     'pois',
     'regions',

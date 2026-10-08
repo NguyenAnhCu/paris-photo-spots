@@ -5,8 +5,9 @@ import type { Page } from '@playwright/test'
 import sharp from 'sharp'
 import { query, spotId } from '../support/db.js'
 import { STORAGE_DIR } from '../support/env.js'
+import { acceptTerms, closeRecoveryCode } from '../support/identity.js'
 import { IMAGES, WITH_EXIF } from '../support/images.js'
-import { camera, waitForIdle, waitForPins } from '../support/map.js'
+import { camera, clickMapAt, waitForPins } from '../support/map.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
 useFreshDatabase()
@@ -19,19 +20,6 @@ async function openForm(page: Page) {
   await waitForPins(page)
   await page.getByRole('button', { name: 'Thêm mark' }).click()
   await expect(page.getByRole('heading', { name: 'Thêm mark' })).toBeVisible()
-}
-
-// Clicks the map where [lng, lat] is drawn right now.
-async function clickMapAt(page: Page, at: [number, number]) {
-  await waitForIdle(page)
-  const p = await page.evaluate((at) => {
-    const map = window.__map
-    if (!map) throw new Error('map not ready')
-    const box = map.getCanvas().getBoundingClientRect()
-    const xy = map.project(at)
-    return { x: box.left + xy.x, y: box.top + xy.y }
-  }, at)
-  await page.mouse.click(p.x, p.y)
 }
 
 // EXIF tag 0x8825 points to the GPS block; look for it in either byte order.
@@ -57,10 +45,12 @@ test('add mark - photo with EXIF fills the camera fields; posting opens the new 
   await page.getByLabel('Tên địa điểm').fill('Canal Saint-Martin')
   await page.getByLabel('Category').selectOption('bridge')
   await page.getByLabel('Ghi chú cho người chụp sau').fill('Cầu sắt màu xanh lúc chiều.')
-  await page.getByLabel('Tên của bạn (tuỳ chọn)').fill('An')
+  await expect(page.getByLabel('Tên của bạn (tuỳ chọn)')).toHaveCount(0) // the author is the posting identity now
+  await acceptTerms(page)
   await page.getByRole('button', { name: 'Đăng mark' }).click()
 
   await expect(page.getByRole('heading', { level: 1, name: 'Canal Saint-Martin' })).toBeVisible()
+  await closeRecoveryCode(page)
   const [spot] = await query<{ id: string; source: string; photo_category: string; lng: number; lat: number }>(
     `SELECT id, source, photo_category, ST_X(geom) AS lng, ST_Y(geom) AS lat FROM pois WHERE name = 'Canal Saint-Martin'`,
   )
@@ -69,11 +59,24 @@ test('add mark - photo with EXIF fills the camera fields; posting opens the new 
   expect(spot?.lat).toBeCloseTo(CANAL[1], 3)
   await expect(page).toHaveURL(`/spots/${spot?.id}`)
 
-  const [photo] = await query<{ file_name: string; focal: string; aperture: string; author_name: string }>(
-    'SELECT file_name, focal, aperture, author_name FROM photos WHERE poi_id = $1',
+  const [photo] = await query<{
+    file_name: string
+    focal: string
+    aperture: string
+    author: string
+    anonymous: boolean
+  }>(
+    `SELECT ph.file_name, ph.focal, ph.aperture, u.display_name AS author, u.is_anonymous AS anonymous
+     FROM photos ph JOIN users u ON u.id = ph.user_id WHERE ph.poi_id = $1`,
     [spot?.id],
   )
-  expect(photo).toMatchObject({ focal: '35mm', aperture: 'f/1.8', author_name: 'An' })
+  // Posted by the anonymous identity created for this first post.
+  expect(photo).toMatchObject({
+    focal: '35mm',
+    aperture: 'f/1.8',
+    author: expect.stringMatching(/^Lữ khách \d{4}$/),
+    anonymous: true,
+  })
   expect(hasGpsTag((await sharp(IMAGES.withExif).metadata()).exif), 'the uploaded original carries GPS').toBe(true)
   const stored = await sharp(path.join(STORAGE_DIR, 'photos', photo?.file_name ?? '')).metadata()
   expect(stored.exif, 'stored photo keeps no EXIF').toBeUndefined()
@@ -91,16 +94,18 @@ test('add mark - photo without EXIF is entered by hand', async ({ page }) => {
   await exifField(page, 'ISO').fill('400')
 
   await page.getByLabel('Tên địa điểm').fill('Parc Monceau')
+  await acceptTerms(page)
   await page.getByRole('button', { name: 'Đăng mark' }).click()
 
   await expect(page.getByRole('heading', { level: 1, name: 'Parc Monceau' })).toBeVisible()
+  await closeRecoveryCode(page)
   const rows = await query<{ focal: string; iso: string; aperture: string | null }>(
     `SELECT ph.focal, ph.iso, ph.aperture FROM photos ph JOIN pois p ON p.id = ph.poi_id WHERE p.name = 'Parc Monceau'`,
   )
   expect(rows).toEqual([{ focal: '50mm', iso: '400', aperture: null }])
 })
 
-test('add mark - the button stays disabled until a place and a name are given', async ({ page }) => {
+test('add mark - the button stays disabled until a place, a name and the terms are given', async ({ page }) => {
   await openForm(page)
   const submit = page.getByRole('button', { name: 'Đăng mark' })
   await expect(submit).toBeDisabled()
@@ -109,6 +114,8 @@ test('add mark - the button stays disabled until a place and a name are given', 
   await expect(submit).toBeDisabled()
 
   await clickMapAt(page, [2.365, 48.874])
+  await expect(submit).toBeDisabled()
+  await acceptTerms(page)
   await expect(submit).toBeEnabled()
 })
 
@@ -121,6 +128,7 @@ test.describe('duplicates', () => {
     await openForm(page)
     await clickMapAt(page, [2.2945, 48.8584])
     await page.getByLabel('Tên địa điểm').fill('Tháp Eiffel lần nữa')
+    await acceptTerms(page)
     await page.getByRole('button', { name: 'Đăng mark' }).click()
 
     await expect(page.getByRole('alert')).toContainText('Đã có một địa điểm ngay tại vị trí này.')

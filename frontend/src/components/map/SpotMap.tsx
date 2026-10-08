@@ -102,6 +102,10 @@ export function SpotMap({
       ['get', 'photoCategory'],
     ]
     const common = { 'icon-allow-overlap': true, 'icon-anchor': 'bottom' } as const
+    // The author's own spot waiting for review: same pin, faded.
+    const paint = {
+      'icon-opacity': ['case', ['boolean', ['get', 'pending'], false], 0.55, 1] as ExpressionSpecification,
+    }
     return [
       {
         id: PINS,
@@ -109,6 +113,7 @@ export function SpotMap({
         source: SOURCE_ID,
         filter: ['all', notCluster, ['!', active]],
         layout: { ...common, 'icon-image': iconImage(false) },
+        paint,
       },
       {
         id: PINS_ACTIVE,
@@ -116,6 +121,7 @@ export function SpotMap({
         source: SOURCE_ID,
         filter: ['all', notCluster, active],
         layout: { ...common, 'icon-image': iconImage(true) },
+        paint,
       },
     ]
   }, [activeIds])

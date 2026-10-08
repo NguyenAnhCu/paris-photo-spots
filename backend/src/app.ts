@@ -5,12 +5,17 @@ import helmet from 'helmet'
 import { pinoHttp } from 'pino-http'
 import { corsOrigins, env } from './config/env.js'
 import { logger } from './lib/logger.js'
-import { authenticate } from './middleware/auth.js'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js'
+import { adminRouter } from './modules/admin/admin.routes.js'
+import { originCheck } from './middleware/originCheck.js'
+import { authRouter } from './modules/auth/auth.routes.js'
 import { healthRouter } from './modules/health/health.routes.js'
+import { meRouter } from './modules/me/me.routes.js'
+import { moderationRouter } from './modules/moderation/moderation.routes.js'
 import { photoRouter } from './modules/photos/photo.routes.js'
 import { poiRouter } from './modules/pois/poi.routes.js'
 import { regionRouter } from './modules/regions/region.routes.js'
+import { reportsRouter } from './modules/reports/reports.routes.js'
 import { spotRouter } from './modules/spots/spot.routes.js'
 import { tileRouter } from './modules/tiles/tile.routes.js'
 import { MEDIA_URL_PREFIX, STORAGE_ROOT } from './storage/photoStorage.js'
@@ -19,18 +24,25 @@ export function createApp() {
   const app = express()
 
   app.use(helmet())
-  app.use(cors({ origin: corsOrigins }))
+  // credentials: the session cookie, for a web app served from another origin than the API (same origin in our setups).
+  app.use(cors({ origin: corsOrigins, credentials: true }))
   app.use(compression())
-  app.use(express.json({ limit: env.JSON_BODY_LIMIT }))
   app.use(pinoHttp({ logger }))
-  app.use(authenticate)
+  // Better Auth parses its own body: before express.json().
+  app.use('/api/auth', authRouter)
+  app.use(express.json({ limit: env.JSON_BODY_LIMIT }))
 
   const api = express.Router()
+  api.use(originCheck([env.PUBLIC_ORIGIN, ...corsOrigins]))
   api.use('/health', healthRouter)
+  api.use('/me', meRouter)
   api.use('/pois', poiRouter)
   api.use('/regions', regionRouter)
   api.use('/spots', spotRouter)
   api.use('/photos', photoRouter)
+  api.use('/reports', reportsRouter)
+  api.use('/moderation', moderationRouter)
+  api.use('/admin', adminRouter)
   app.use('/api/v1', api)
 
   app.use('/tiles', tileRouter)

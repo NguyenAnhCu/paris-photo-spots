@@ -1,6 +1,9 @@
 import { env } from '../../config/env.js'
 import { AppError } from '../../lib/errors.js'
 import { isInBBox, SUPPORTED_SPOT_BBOX } from '../../lib/geo.js'
+import { can } from '../../lib/permissions.js'
+import type { AuthUser } from '../auth/auth.service.js'
+import { meService } from '../me/me.service.js'
 import { spotRepository, type SpotRow } from './spot.repository.js'
 import type { CreateSpotBody, SpotLang } from './spot.schemas.js'
 
@@ -36,9 +39,17 @@ function toFeature(row: SpotRow, lang: SpotLang) {
   }
 }
 
+// Public spots for everyone; one that is not (pending, rejected, hidden) only for its author and for reviewers.
+export function canSee(row: Pick<SpotRow, 'status' | 'created_by'>, viewer: AuthUser | undefined): boolean {
+  if (row.status === 'approved') return true
+  if (!viewer) return false
+  return row.created_by === viewer.id || can(viewer, 'moderate')
+}
+
 function toDetail(row: SpotRow, lang: SpotLang) {
   return {
     id: row.id,
+    status: row.status,
     name: localizedName(row, lang),
     name_original: row.name,
     photo_category: row.photo_category,
@@ -62,21 +73,25 @@ export const spotService = {
     return { type: 'FeatureCollection' as const, features: rows.map((r) => toFeature(r, lang)) }
   },
 
-  async byId(id: string, lang: SpotLang) {
+  // Not visible = not found: a pending spot's existence is not revealed to others.
+  async byId(id: string, lang: SpotLang, viewer?: AuthUser) {
+    return toDetail(await this.visibleRow(id, viewer), lang)
+  },
+
+  async visibleRow(id: string, viewer?: AuthUser): Promise<SpotRow> {
     const row = await spotRepository.byId(id)
-    if (!row) throw new AppError('SPOT_NOT_FOUND', 404, 'Spot not found')
-    return toDetail(row, lang)
+    if (!row || !canSee(row, viewer)) throw new AppError('SPOT_NOT_FOUND', 404, 'Spot not found')
+    return row
   },
 
-  async ensureExists(id: string): Promise<void> {
-    if (!(await spotRepository.byId(id))) throw new AppError('SPOT_NOT_FOUND', 404, 'Spot not found')
-  },
-
-  async create(body: CreateSpotBody) {
+  async create(actor: AuthUser, body: CreateSpotBody) {
     if (!isInBBox([body.lng, body.lat], SUPPORTED_SPOT_BBOX)) {
       throw new AppError('OUT_OF_AREA', 400, 'Location is outside the supported area')
     }
+    await meService.assertCanPost(actor, 'spot')
     const result = await spotRepository.insertUserSpotUnlessDuplicate({
+      createdBy: actor.id,
+      status: await meService.initialStatusFor(actor),
       name: body.name,
       photoCategory: body.photo_category,
       lng: body.lng,
@@ -93,6 +108,6 @@ export const spotService = {
       const { id, name } = result.duplicate
       throw new AppError('SPOT_DUPLICATE', 409, `A spot already exists here: ${name}`, [{ id }])
     }
-    return this.byId(result.id, body.lang)
+    return this.byId(result.id, body.lang, actor)
   },
 }

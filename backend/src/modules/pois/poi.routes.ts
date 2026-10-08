@@ -20,4 +20,4 @@ poiRouter.get('/item', async (req, res) => {
   res.json(await poiService.byId(IdQuery.parse(req.query).id))
 })
 
-// TODO(phase-1): POST /, /update, /delete with requireRole('editor') + region-scope check in service.
+// TODO(phase-1): POST /, /update, /delete with requirePermission('edit_spot') + region-scope check in service.

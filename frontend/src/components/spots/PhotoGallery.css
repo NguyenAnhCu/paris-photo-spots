@@ -58,3 +58,15 @@
   gap: 8px;
   align-items: center;
 }
+
+.gallery__cell {
+  position: relative;
+}
+.gallery__status {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+}
+.viewer__report {
+  align-self: flex-start;
+}

@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { writeRateLimit } from '../../middleware/rateLimit.js'
+import { currentUser, loadUser, requirePermission } from '../auth/session.js'
 import { CreateSpotBody, ListSpotsQuery, SpotItemQuery } from './spot.schemas.js'
 import { spotService } from './spot.service.js'
 
@@ -12,11 +13,12 @@ spotRouter.get('/', async (req, res) => {
   res.json(await spotService.list(lang))
 })
 
-spotRouter.get('/item', async (req, res) => {
+// The author (and reviewers) can open a spot that is still waiting for review.
+spotRouter.get('/item', loadUser, async (req, res) => {
   const { id, lang } = SpotItemQuery.parse(req.query)
-  res.json(await spotService.byId(id, lang))
+  res.json(await spotService.byId(id, lang, req.user))
 })
 
-spotRouter.post('/', writeRateLimit, async (req, res) => {
-  res.status(201).json(await spotService.create(CreateSpotBody.parse(req.body)))
+spotRouter.post('/', writeRateLimit, requirePermission('post'), async (req, res) => {
+  res.status(201).json(await spotService.create(currentUser(req), CreateSpotBody.parse(req.body)))
 })
