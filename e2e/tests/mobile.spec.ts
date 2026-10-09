@@ -37,6 +37,13 @@ test('mobile - list first; map tab shows the pins', async ({ page }) => {
   expect((await rendered(page, LAYERS.pins)).length).toBeGreaterThan(0)
 })
 
+test('mobile - before the map has loaded, the list already matches its opening area', async ({ page }) => {
+  await page.route('**/e2e/map-style.json', () => {}) // the map never loads
+  await page.goto('/')
+  await expect(page.getByText('Trong vùng bản đồ')).toBeVisible()
+  await expect(page.locator('.spot-card--stacked')).toHaveCount(7)
+})
+
 test('mobile - the list follows the area last seen on the map tab', async ({ page }) => {
   await page.goto('/')
   await tab(page, 'Bản đồ').tap()

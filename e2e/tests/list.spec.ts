@@ -124,3 +124,29 @@ test('list - keyboard: "/" focuses search, Enter on a card opens it', async ({ p
 
   await expect(page).toHaveURL(`/spots/${await spotId('eiffel')}`)
 })
+
+test.describe('before the map has loaded', () => {
+  // The style request never answers: the map stays blank, the list must already match the area it will open on
+  // (no first frame with every spot that then shrinks).
+  test('list - is limited to the opening map area from the first paint', async ({ page }) => {
+    await page.route('**/e2e/map-style.json', () => {})
+    await page.goto('/')
+    await expect(page.getByText('Trong vùng bản đồ')).toBeVisible()
+    await expect(cardNames(page)).toHaveCount(IN_VIEW)
+    await expect(page.getByRole('button', { name: `Xem tất cả (${ALL})` })).toBeVisible()
+  })
+})
+
+test.describe('tablet', () => {
+  test.use({ viewport: { width: 900, height: 1180 } })
+
+  test('list - tablet column lists the spots in the (hidden) map area, before and after the map loads', async ({
+    page,
+  }) => {
+    await page.goto('/')
+    await expect(page.locator('.spot-card--stacked')).toHaveCount(IN_VIEW)
+    await waitForPins(page)
+    await waitForIdle(page)
+    await expect(page.locator('.spot-card--stacked')).toHaveCount(IN_VIEW)
+  })
+})
