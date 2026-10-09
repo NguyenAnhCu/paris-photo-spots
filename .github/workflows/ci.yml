@@ -66,17 +66,6 @@ jobs:
   test-integration:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    services:
-      postgis:
-        image: postgis/postgis:17-3.4 # same tag as backend/test/integration/globalSetup.ts
-        env:
-          POSTGRES_USER: pmv
-          POSTGRES_PASSWORD: pmv
-          POSTGRES_DB: pmv_test
-        ports:
-          - 5434:5432
-        options: >-
-          --health-cmd "pg_isready -U pmv -d pmv_test" --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -84,13 +73,20 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The integration tests migrate the service database below instead of starting a Testcontainers PostGIS:
-      # Docker Hub timed out on pulls made from inside the job (2026-10-09) while service containers kept working.
+      # Docker Hub sometimes times out (2026-10-09: twice in a row on the token request). Pull with retries first:
+      # Testcontainers only pulls an image the runner does not have. Same tag as backend/test/integration/globalSetup.ts.
+      - name: Pull the PostGIS image (with retries)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            docker pull postgis/postgis:17-3.4 && exit 0
+            echo "Pull failed (attempt $attempt), retrying in $((attempt * 15)) s"
+            sleep $((attempt * 15))
+          done
+          exit 1
+      # Testcontainers starts postgis/postgis:17-3.4 on the runner's Docker and runs the migrations.
       # Unit tests run again here (≈ 1 s) so the coverage covers the whole backend.
       - name: Backend unit + integration tests (PostGIS, with coverage)
         run: npm run test:coverage -w backend
-        env:
-          INTEGRATION_DATABASE_URL: postgres://pmv:pmv@localhost:5434/pmv_test
       - name: Coverage summary
         if: ${{ !cancelled() }}
         run: node .github/scripts/coverage-report.mjs "Backend (unit + integration)=backend/coverage/coverage-summary.json" >> "$GITHUB_STEP_SUMMARY"
