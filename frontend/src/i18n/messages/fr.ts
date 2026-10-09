@@ -23,6 +23,13 @@ export const fr: Messages = {
   'list.count': '{count} spots',
   'list.empty': 'Aucun spot ne correspond.',
   'list.clearFilters': 'Effacer les filtres',
+  'list.scope.view': 'Dans la zone de la carte',
+  'list.scope.all': 'Tous les spots',
+  'list.scope.search': 'Résultats sur toute la carte',
+  'list.showAll': 'Tout afficher ({count})',
+  'list.onlyInView': 'Seulement dans la zone de la carte',
+  'list.emptyInView': 'Aucun spot dans cette zone de la carte. Dézoomez ou déplacez la carte, ou affichez tout.',
+  'list.more': 'Afficher {count} spots de plus',
   'list.loading': 'Chargement des spots…',
   'list.error': 'Impossible de charger les spots.',
 

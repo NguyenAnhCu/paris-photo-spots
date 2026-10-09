@@ -5,9 +5,13 @@ import { Outlet, useMatch } from 'react-router-dom'
 import type { MapFocus } from '@/components/map/SpotMap'
 import { MobileHeader, BottomSegmented, MiniSpotCard, PlacingBar } from '@/components/spots/MobileChrome'
 import { TopBar } from '@/components/spots/TopBar'
+import { config } from '@/config'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useFilteredSpots, useSpotFilters } from '@/hooks/useSpotFilters'
 import { useSpots } from '@/hooks/useSpots'
+import { roundBBox, type BBox } from '@/lib/geo'
+import type { ListScope } from '@/lib/listScope'
 import { MapUiContext, useSpotNav, type MapUi, type Placement } from './mapUi'
 import './MapLayout.css'
 
@@ -39,6 +43,14 @@ export function MapLayout() {
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list')
   const [mobileSelected, setMobileSelected] = useState<string | null>(null)
   const [pickingOnMap, setPickingOnMap] = useState(false)
+  const [viewBounds, setViewBounds] = useState<BBox | null>(null)
+  const [listScope, setListScope] = useState<ListScope>('view')
+  // The map reports where it stopped (moveend); the list follows once the map has been still for a moment, and only
+  // when the area really changed (rounded to ~10 m), so zooming in and out repeatedly re-filters the list once.
+  const onViewChange = useDebouncedCallback((next: BBox) => {
+    const rounded = roundBBox(next, 4)
+    setViewBounds((cur) => (cur && cur.every((v, i) => v === rounded[i]) ? cur : rounded))
+  }, config.viewDebounceMs)
   const mapAllowed = useAfterFirstPaint()
 
   const focusSpot = useCallback((s: { id: string; lng: number; lat: number }) => {
@@ -56,8 +68,11 @@ export function MapLayout() {
       setMobileTab,
       pickingOnMap,
       setPickingOnMap,
+      viewBounds,
+      listScope,
+      setListScope,
     }),
-    [hoverId, focusSpot, placement, mobileTab, pickingOnMap],
+    [hoverId, focusSpot, placement, mobileTab, pickingOnMap, viewBounds, listScope],
   )
 
   // Desktop: a pin opens the detail panel. Mobile/tablet: it selects the spot and shows the mini card.
@@ -103,6 +118,7 @@ export function MapLayout() {
                   showZoom={bp !== 'mobile'}
                   draft={placement ?? undefined}
                   onSelect={onSelect}
+                  onViewChange={onViewChange}
                   onHover={isDesktop ? setHoverId : undefined}
                   onPlace={
                     placing && (isDesktop || pickingOnMap)

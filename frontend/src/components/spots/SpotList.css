@@ -10,6 +10,40 @@
   font-size: 30px;
   line-height: 1;
 }
+.spot-list__scope {
+  margin: 0;
+  padding: 0 22px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 13px;
+}
+.column .spot-list__scope {
+  padding: 0;
+}
+.spot-list__scope > span {
+  opacity: 0.75;
+}
+/* Text link that is still a 44 px touch target. */
+.spot-list__scope-link {
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-700);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.spot-list__more {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+}
 .spot-list__items {
   padding: 8px 14px 16px;
   display: grid;

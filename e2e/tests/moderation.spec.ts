@@ -44,7 +44,9 @@ test('moderation - a new spot waits for review, then goes public once a reviewer
 
   const visitor = await (await browser.newContext()).newPage()
   await visitor.goto('/')
-  await expect(visitor.getByText('11 địa điểm')).toBeVisible()
+  // 11 public spots in all, the pending one not among them. This context has no local map tiles, so its map may not
+  // load: the list then shows every spot ("11 địa điểm") instead of offering "Xem tất cả (11)" for the map area.
+  await expect(visitor.getByText(/^(11 địa điểm|Xem tất cả \(11\))$/).first()).toBeVisible()
   await expect(visitor.getByRole('button', { name: /^Bassin de la Villette/ })).toHaveCount(0)
 
   const reviewer = await reviewerPage(browser)

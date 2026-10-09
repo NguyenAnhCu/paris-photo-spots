@@ -1,6 +1,7 @@
-// The spot list on desktop: search, category filter, filters in the URL, Back, keyboard.
+// The spot list on desktop: spots in the map area, search, category filter, filters in the URL, Back, keyboard.
 import type { Page } from '@playwright/test'
 import { spotId } from '../support/db.js'
+import { waitForIdle, waitForPins } from '../support/map.js'
 import { expect, test, useFreshDatabase } from '../support/test.js'
 
 useFreshDatabase()
@@ -11,9 +12,51 @@ const expectSpots = async (page: Page, names: string[]) =>
   expect.poll(async () => (await cardNames(page).allInnerTexts()).sort()).toEqual([...names].sort())
 const search = (page: Page) => page.getByRole('searchbox', { name: 'Tìm địa điểm chụp' })
 
+// The map opens on central Paris: every seeded spot but Versailles is in view (not under the list panel).
+const IN_VIEW = 10
+const ALL = 11
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByText('11 địa điểm')).toBeVisible()
+  await expect(page.getByText(`${IN_VIEW} địa điểm`)).toBeVisible()
+})
+
+test('list - shows only the spots in the visible map area; "show all" lists every spot', async ({ page }) => {
+  await expect(page.getByText('Trong vùng bản đồ')).toBeVisible()
+  await expect(cardNames(page)).toHaveCount(IN_VIEW)
+  await expect(page.getByRole('button', { name: /Versailles/ })).toHaveCount(0)
+
+  await page.getByRole('button', { name: `Xem tất cả (${ALL})` }).click()
+  await expect(page.getByText(`${ALL} địa điểm`)).toBeVisible()
+  await expect(page.getByRole('button', { name: /Versailles/ })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Chỉ trong vùng bản đồ' }).click()
+  await expect(cardNames(page)).toHaveCount(IN_VIEW)
+})
+
+test('list - follows the map once it stops; zooming in and out never reloads the spots', async ({ page }) => {
+  await waitForPins(page)
+  const spotRequests: string[] = []
+  page.on('request', (r) => {
+    if (new URL(r.url()).pathname === '/api/v1/spots') spotRequests.push(r.url())
+  })
+  // Close in on the Eiffel Tower: only that spot is left in view.
+  await page.evaluate(() => window.__map?.jumpTo({ center: [2.2945, 48.8584], zoom: 16 }))
+  await expectSpots(page, ['Tháp Eiffel'])
+  await expect(page.getByText('1 địa điểm')).toBeVisible()
+  // A burst of zooms out and in, as a trackpad does: the list settles on the last view.
+  await page.evaluate(() => {
+    for (const zoom of [15, 13, 12, 14, 12]) window.__map?.jumpTo({ center: [2.3322, 48.8566], zoom })
+  })
+  await waitForIdle(page)
+  await expect(page.getByText(`${IN_VIEW} địa điểm`)).toBeVisible()
+  expect(spotRequests).toEqual([])
+})
+
+test('list - a search finds a spot outside the map area', async ({ page }) => {
+  await search(page).fill('versailles')
+  await expect(cardNames(page)).toHaveText([/Versailles/])
+  await expect(page.getByText('Kết quả trên toàn bộ bản đồ')).toBeVisible()
 })
 
 test('list - search ignores accents and case, and goes into the URL', async ({ page }) => {

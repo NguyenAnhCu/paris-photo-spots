@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { AccountProvider } from '@/components/account/AccountProvider'
 import { I18nProvider } from '@/i18n/I18nProvider'
 import type { Locale } from '@/i18n/translate'
+import type { ListScope } from '@/lib/listScope'
 import { MapUiContext, type MapUi, type Placement } from '@/pages/mapUi'
 import type { SpotCollection, SpotSummary } from '@/types/spot'
 
@@ -21,6 +22,7 @@ function MapUiState({ initial, children }: { initial?: Partial<MapUi>; children:
   const [placement, setPlacement] = useState<Placement | null>(initial?.placement ?? null)
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>(initial?.mobileTab ?? 'list')
   const [pickingOnMap, setPickingOnMap] = useState(initial?.pickingOnMap ?? false)
+  const [listScope, setListScope] = useState<ListScope>(initial?.listScope ?? 'view')
   const value: MapUi = {
     hoverId,
     setHoverId,
@@ -31,6 +33,9 @@ function MapUiState({ initial, children }: { initial?: Partial<MapUi>; children:
     setMobileTab,
     pickingOnMap,
     setPickingOnMap,
+    viewBounds: initial?.viewBounds ?? null,
+    listScope,
+    setListScope,
   }
   return (
     <MapUiContext.Provider value={value}>
