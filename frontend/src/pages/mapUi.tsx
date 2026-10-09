@@ -1,7 +1,8 @@
 // UI state shared between the persistent map (MapLayout) and the routed panels (list, detail, photos, add).
 import { createContext, useContext, type Dispatch, type SetStateAction } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import type { LngLat } from '@/lib/geo'
+import type { BBox, LngLat } from '@/lib/geo'
+import type { ListScope } from '@/lib/listScope'
 import type { SpotCategory } from '@/types/spot'
 
 export type Placement = { position: LngLat | null; category: SpotCategory | null }
@@ -17,6 +18,10 @@ export type MapUi = {
   setMobileTab: (tab: 'list' | 'map') => void
   pickingOnMap: boolean // mobile/tablet: full-screen map to pick the location
   setPickingOnMap: (on: boolean) => void
+  // Map area the user can see (desktop: not under the floating panel); null until the map has loaded.
+  viewBounds: BBox | null
+  listScope: ListScope // list: spots in the map area, or all of them
+  setListScope: (scope: ListScope) => void
 }
 
 export const MapUiContext = createContext<MapUi | null>(null)

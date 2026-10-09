@@ -18,7 +18,7 @@ const SCREENS: { name: string; path: () => string; ready: (page: Page) => Promis
   {
     name: 'list',
     path: () => '/',
-    ready: (page) => expect(page.getByText('11 địa điểm').first()).toBeVisible(),
+    ready: (page) => expect(page.getByText(/^\d+ địa điểm$/).first()).toBeVisible(),
   },
   {
     name: 'spot',

@@ -15,4 +15,7 @@ export const config = {
   breakpoints: { desktop: 1000, tablet: 820 },
   weatherStaleMs: 10 * 60_000, // cache weather 10–15 min
   photosPageSize: 24,
+  listPageSize: 20, // spot cards rendered per step; the next step comes when the list end scrolls into view
+  // The list follows the map once it has stopped for this long: a burst of zooms updates it once.
+  viewDebounceMs: 250,
 }

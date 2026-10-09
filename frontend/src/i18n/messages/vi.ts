@@ -23,6 +23,13 @@ export const vi = {
   'list.count': '{count} địa điểm',
   'list.empty': 'Không có địa điểm phù hợp.',
   'list.clearFilters': 'Xoá bộ lọc',
+  'list.scope.view': 'Trong vùng bản đồ',
+  'list.scope.all': 'Tất cả địa điểm',
+  'list.scope.search': 'Kết quả trên toàn bộ bản đồ',
+  'list.showAll': 'Xem tất cả ({count})',
+  'list.onlyInView': 'Chỉ trong vùng bản đồ',
+  'list.emptyInView': 'Không có địa điểm nào trong vùng bản đồ này. Thu nhỏ hoặc kéo bản đồ, hoặc xem tất cả.',
+  'list.more': 'Xem thêm {count} địa điểm',
   'list.loading': 'Đang tải địa điểm…',
   'list.error': 'Không tải được danh sách địa điểm.',
 

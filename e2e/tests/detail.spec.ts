@@ -73,7 +73,8 @@ for (const width of [900]) {
     await page.setViewportSize({ width, height: 1100 })
     await page.goto('/')
     const cards = page.locator('.spot-card--stacked')
-    await expect(cards).toHaveCount(11)
+    // The spots in the opening map area (Versailles is outside it).
+    await expect(cards).toHaveCount(10)
 
     const offsets = await cards.evaluateAll((els) =>
       els.map((card) => {
