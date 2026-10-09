@@ -1,5 +1,7 @@
 // Starts one PostGIS container for the integration project and migrates it. The image tag is the one used locally and
-// in docker-compose.yml, so SQL behaves the same everywhere.
+// in docker-compose.yml, so SQL behaves the same everywhere. CI gives an empty database of its own instead
+// (INTEGRATION_DATABASE_URL, a GitHub Actions service container): pulling the image from inside a job failed when
+// Docker Hub timed out, while service containers kept working.
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,12 +14,15 @@ const BACKEND_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 let container: StartedPostgreSqlContainer | undefined
 
 export async function setup(project: TestProject) {
-  container = await new PostgreSqlContainer(POSTGIS_IMAGE)
-    .withDatabase('pmv_test')
-    .withUsername('pmv')
-    .withPassword('pmv')
-    .start()
-  const url = container.getConnectionUri()
+  const given = process.env.INTEGRATION_DATABASE_URL
+  if (!given) {
+    container = await new PostgreSqlContainer(POSTGIS_IMAGE)
+      .withDatabase('pmv_test')
+      .withUsername('pmv')
+      .withPassword('pmv')
+      .start()
+  }
+  const url = given ?? container?.getConnectionUri() ?? ''
   // Handed to the workers through provide/inject (setupDatabaseEnv.ts): the config's `env` would override a plain
   // process.env assignment here.
   project.provide('databaseUrl', url)
