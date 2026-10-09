@@ -24,6 +24,10 @@ async function tapMapAt(page: Page, at: [number, number]) {
 test('mobile - list first; map tab shows the pins', async ({ page }) => {
   await page.goto('/')
   await expect(tab(page, 'Danh sách')).toHaveAttribute('aria-selected', 'true')
+  // The (hidden) map opens on central Paris, narrower than on desktop: 7 of the 11 spots are in its area.
+  await expect(page.getByText('Trong vùng bản đồ')).toBeVisible()
+  await expect(page.locator('.spot-card--stacked')).toHaveCount(7)
+  await page.getByRole('button', { name: 'Xem tất cả (11)' }).tap()
   await expect(page.locator('.spot-card--stacked')).toHaveCount(11)
 
   await tab(page, 'Bản đồ').tap()
@@ -31,6 +35,23 @@ test('mobile - list first; map tab shows the pins', async ({ page }) => {
   await expect(tab(page, 'Bản đồ')).toHaveAttribute('aria-selected', 'true')
   await waitForPins(page)
   expect((await rendered(page, LAYERS.pins)).length).toBeGreaterThan(0)
+})
+
+test('mobile - before the map has loaded, the list already matches its opening area', async ({ page }) => {
+  await page.route('**/e2e/map-style.json', () => {}) // the map never loads
+  await page.goto('/')
+  await expect(page.getByText('Trong vùng bản đồ')).toBeVisible()
+  await expect(page.locator('.spot-card--stacked')).toHaveCount(7)
+})
+
+test('mobile - the list follows the area last seen on the map tab', async ({ page }) => {
+  await page.goto('/')
+  await tab(page, 'Bản đồ').tap()
+  await waitForPins(page)
+  await page.evaluate(() => window.__map?.jumpTo({ center: [2.2945, 48.8584], zoom: 16 }))
+  await waitForIdle(page)
+  await tab(page, 'Danh sách').tap()
+  await expect(page.locator('.spot-card--stacked .spot-card__name')).toHaveText(['Tháp Eiffel'])
 })
 
 test('mobile - pin → mini card → spot page → Back keeps the map tab', async ({ page }) => {

@@ -1,13 +1,17 @@
 // Persistent shell: the map never unmounts while panels change with the route. Desktop (≥1000px): full-bleed map +
 // floating top bar + left panel. Tablet/mobile: header + content column, "Danh sách | Bản đồ" switch (F4).
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Outlet, useMatch } from 'react-router-dom'
 import type { MapFocus } from '@/components/map/SpotMap'
 import { MobileHeader, BottomSegmented, MiniSpotCard, PlacingBar } from '@/components/spots/MobileChrome'
 import { TopBar } from '@/components/spots/TopBar'
+import { config } from '@/config'
 import { useBreakpoint } from '@/hooks/useBreakpoint'
+import { useDebouncedCallback } from '@/hooks/useDebouncedCallback'
 import { useFilteredSpots, useSpotFilters } from '@/hooks/useSpotFilters'
 import { useSpots } from '@/hooks/useSpots'
+import { roundBBox, viewBoundsAt, type BBox } from '@/lib/geo'
+import type { ListScope } from '@/lib/listScope'
 import { MapUiContext, useSpotNav, type MapUi, type Placement } from './mapUi'
 import './MapLayout.css'
 
@@ -39,6 +43,31 @@ export function MapLayout() {
   const [mobileTab, setMobileTab] = useState<'list' | 'map'>('list')
   const [mobileSelected, setMobileSelected] = useState<string | null>(null)
   const [pickingOnMap, setPickingOnMap] = useState(false)
+  const [viewBounds, setViewBounds] = useState<BBox | null>(null)
+  const [listScope, setListScope] = useState<ListScope>('view')
+  // The map reports where it stopped (moveend); the list follows once the map has been still for a moment, and only
+  // when the area really changed (rounded to ~10 m), so zooming in and out repeatedly re-filters the list once.
+  const onViewChange = useDebouncedCallback((next: BBox) => {
+    const rounded = roundBBox(next, 4)
+    setViewBounds((cur) => (cur && cur.every((v, i) => v === rounded[i]) ? cur : rounded))
+  }, config.viewDebounceMs)
+  // The map chunk loads after the first paint: until it reports, the list uses the area the map will open on
+  // (same camera, measured container), so it does not first list every spot and then shrink.
+  const mapBox = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = mapBox.current
+    if (!el || el.clientWidth === 0 || el.clientHeight === 0) return
+    const estimate = viewBoundsAt({
+      center: config.defaultCenter,
+      zoom: config.defaultZoom,
+      width: el.clientWidth,
+      height: el.clientHeight,
+      leftPadding: isDesktop ? PANEL_COVERAGE_PX : 0,
+    })
+    setViewBounds((cur) => cur ?? roundBBox(estimate, 4))
+    // Once, before the first paint: later areas come from the map itself.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const mapAllowed = useAfterFirstPaint()
 
   const focusSpot = useCallback((s: { id: string; lng: number; lat: number }) => {
@@ -56,8 +85,11 @@ export function MapLayout() {
       setMobileTab,
       pickingOnMap,
       setPickingOnMap,
+      viewBounds,
+      listScope,
+      setListScope,
     }),
-    [hoverId, focusSpot, placement, mobileTab, pickingOnMap],
+    [hoverId, focusSpot, placement, mobileTab, pickingOnMap, viewBounds, listScope],
   )
 
   // Desktop: a pin opens the detail panel. Mobile/tablet: it selects the spot and shows the mini card.
@@ -92,7 +124,7 @@ export function MapLayout() {
             {pickingOnMap && <PlacingBar />}
           </main>
           {/* After the content in DOM order so Tab reaches the top bar and the list first (z-index keeps it underneath). */}
-          <div className="layout__map" data-visible={mapVisible}>
+          <div ref={mapBox} className="layout__map" data-visible={mapVisible}>
             {mapAllowed && (
               <Suspense fallback={null}>
                 <SpotMap
@@ -103,6 +135,7 @@ export function MapLayout() {
                   showZoom={bp !== 'mobile'}
                   draft={placement ?? undefined}
                   onSelect={onSelect}
+                  onViewChange={onViewChange}
                   onHover={isDesktop ? setHoverId : undefined}
                   onPlace={
                     placing && (isDesktop || pickingOnMap)

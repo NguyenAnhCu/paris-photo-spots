@@ -13,6 +13,8 @@ import {
   renderWithApp,
   spot,
 } from '@/test/render'
+import type { BBox } from '@/lib/geo'
+import type { SpotCollection, SpotSummary } from '@/types/spot'
 import { SpotList } from './SpotList'
 
 const t = createTranslator('vi')
@@ -130,5 +132,90 @@ describe('SpotList: own spots waiting for review', () => {
     expect(cards[1]).not.toHaveTextContent(t('status.pending'))
     // Rejected ones are not on the list (they are in "My posts").
     expect(screen.queryByText('Refusé')).toBeNull()
+  })
+})
+
+// Spots at real places: two in central Paris, one in Versailles. The map shows central Paris.
+const PLACED: SpotCollection = {
+  type: 'FeatureCollection',
+  features: [
+    placed('louvre', 'Musée du Louvre', 2.3376, 48.8606, 'landmark'),
+    placed('eiffel', 'Tour Eiffel', 2.2945, 48.8584, 'landmark'),
+    placed('versailles', 'Château de Versailles', 2.1204, 48.8049, 'landmark'),
+  ],
+}
+const CENTRAL_PARIS: BBox = [2.28, 48.84, 2.36, 48.88]
+
+function placed(id: string, name: string, lng: number, lat: number, photoCategory: SpotSummary['photoCategory']) {
+  return {
+    type: 'Feature' as const,
+    geometry: { type: 'Point' as const, coordinates: [lng, lat] },
+    properties: spot({ id, name, photoCategory }),
+  }
+}
+
+function withPlaced(data: SpotCollection = PLACED) {
+  const queryClient = createTestQueryClient()
+  queryClient.setQueryData(spotKeys.all('vi'), data)
+  return queryClient
+}
+
+const cardNames = () =>
+  screen.getAllByRole('button', { name: /Louvre|Eiffel|Versailles|Spot \d+/ }).map((b) => b.textContent ?? '')
+
+describe('SpotList — only the spots in the map view', () => {
+  it('lists the spots inside the visible map area; the count and a line say so', () => {
+    renderWithApp(<SpotList layout="panel" />, { queryClient: withPlaced(), mapUi: { viewBounds: CENTRAL_PARIS } })
+    expect(cardNames()).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: /Versailles/ })).toBeNull()
+    expect(screen.getByText(t('list.count', { count: 2 }))).toBeInTheDocument()
+    expect(screen.getByText(t('list.scope.view'))).toBeInTheDocument()
+  })
+
+  it('"show all" lists every spot, and can go back to the map area', async () => {
+    const user = userEvent.setup()
+    renderWithApp(<SpotList layout="column" />, { queryClient: withPlaced(), mapUi: { viewBounds: CENTRAL_PARIS } })
+    await user.click(screen.getByRole('button', { name: t('list.showAll', { count: 3 }) }))
+    expect(cardNames()).toHaveLength(3)
+    expect(screen.getByText(t('list.scope.all'))).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: t('list.onlyInView') }))
+    expect(cardNames()).toHaveLength(2)
+  })
+
+  it('a search looks through every spot, not only the map area', () => {
+    renderWithApp(<SpotList layout="panel" />, {
+      queryClient: withPlaced(),
+      mapUi: { viewBounds: CENTRAL_PARIS },
+      route: '/?q=versailles',
+    })
+    expect(cardNames()).toEqual([expect.stringContaining('Versailles')])
+    expect(screen.getByText(t('list.scope.search'))).toBeInTheDocument()
+  })
+
+  it('nothing in the map area: says so and offers to show all', async () => {
+    const user = userEvent.setup()
+    renderWithApp(<SpotList layout="panel" />, {
+      queryClient: withPlaced(),
+      mapUi: { viewBounds: [2.0, 49.2, 2.1, 49.3] }, // fields north of Paris
+    })
+    expect(screen.getByText(t('list.emptyInView'))).toBeInTheDocument()
+    await user.click(screen.getAllByRole('button', { name: t('list.showAll', { count: 3 }) })[0] as HTMLElement)
+    expect(cardNames()).toHaveLength(3)
+  })
+
+  it('long lists come 20 cards at a time; "show more" (or scrolling to the end) adds the next 20', async () => {
+    const user = userEvent.setup()
+    const many: SpotCollection = {
+      type: 'FeatureCollection',
+      features: Array.from({ length: 45 }, (_, i) => placed(`s${i}`, `Spot ${i + 1}`, 2.3 + i / 1000, 48.86, 'street')),
+    }
+    renderWithApp(<SpotList layout="panel" />, { queryClient: withPlaced(many), mapUi: { viewBounds: CENTRAL_PARIS } })
+    expect(cardNames()).toHaveLength(20)
+    expect(screen.getByText(t('list.count', { count: 45 }))).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: t('list.more', { count: 25 }) }))
+    expect(cardNames()).toHaveLength(40)
+    await user.click(screen.getByRole('button', { name: t('list.more', { count: 5 }) }))
+    expect(cardNames()).toHaveLength(45)
+    expect(screen.queryByRole('button', { name: /Xem thêm/ })).toBeNull()
   })
 })

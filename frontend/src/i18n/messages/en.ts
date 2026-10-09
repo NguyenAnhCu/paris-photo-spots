@@ -23,6 +23,13 @@ export const en: Messages = {
   'list.count': '{count} spots',
   'list.empty': 'No matching spots.',
   'list.clearFilters': 'Clear filters',
+  'list.scope.view': 'In the map area',
+  'list.scope.all': 'All spots',
+  'list.scope.search': 'Results from the whole map',
+  'list.showAll': 'Show all ({count})',
+  'list.onlyInView': 'Only in the map area',
+  'list.emptyInView': 'No spots in this map area. Zoom out or move the map, or show all.',
+  'list.more': 'Show {count} more spots',
   'list.loading': 'Loading spots…',
   'list.error': 'Could not load the spots.',
 

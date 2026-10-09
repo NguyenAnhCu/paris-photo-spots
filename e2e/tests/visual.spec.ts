@@ -43,10 +43,18 @@ async function shoot(page: Page, name: string, map = true) {
 }
 
 // Desktop shows the map next to the panels; on the phone the list/detail pages come without it.
+// The list shows the spots in the map area; the (possibly hidden) map reports that area once loaded, then the list
+// settles after the debounce. Wait for that final state, or the shot catches the list changing.
+async function listSettled(page: Page, cards: number) {
+  await waitForPins(page)
+  await page.waitForTimeout(VIEW_DEBOUNCE_MS + 100)
+  await expect(page.locator('.spot-card')).toHaveCount(cards)
+}
+const VIEW_DEBOUNCE_MS = 250 // frontend config.viewDebounceMs
+
 test('visual - home', async ({ page, isMobile }) => {
   await page.goto('/')
-  await expect(page.locator('.spot-card')).toHaveCount(11)
-  if (!isMobile) await waitForPins(page)
+  await listSettled(page, isMobile ? 7 : 10)
   await shoot(page, 'home', !isMobile)
 })
 
@@ -78,7 +86,7 @@ test.describe('tablet', () => {
 
   test('visual - tablet card grid', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('.spot-card--stacked')).toHaveCount(11)
+    await listSettled(page, 10)
     await shoot(page, 'tablet-grid', false)
   })
 })

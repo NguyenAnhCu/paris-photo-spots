@@ -45,3 +45,29 @@ export function circlePolygon(center: LngLat, radiusM: number, steps = 64): Poly
   }
   return { type: 'Polygon', coordinates: [ring] }
 }
+
+// The area a MapLibre map shows (512-px tiles, Web Mercator, no rotation) for a camera and a container size, with the
+// left `leftPadding` pixels covered (desktop panel). Lets the list match the map area before the map chunk has loaded.
+export function viewBoundsAt(opts: {
+  center: LngLat
+  zoom: number
+  width: number
+  height: number
+  leftPadding: number
+}): BBox {
+  const { center, zoom, width, height } = opts
+  const left = opts.leftPadding < width ? opts.leftPadding : 0
+  const worldPx = 512 * 2 ** zoom
+  const toX = (lng: number) => ((lng + 180) / 360) * worldPx
+  const toY = (lat: number) => {
+    const s = Math.sin((lat * Math.PI) / 180)
+    return (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * worldPx
+  }
+  const fromX = (x: number) => (x / worldPx) * 360 - 180
+  const fromY = (y: number) => (Math.atan(Math.sinh(Math.PI * (1 - (2 * y) / worldPx))) * 180) / Math.PI
+  // Padding moves the camera centre to the middle of the uncovered area.
+  const cx = toX(center[0])
+  const cy = toY(center[1])
+  const half = (width - left) / 2
+  return [fromX(cx - half), fromY(cy + height / 2), fromX(cx + half), fromY(cy - height / 2)]
+}

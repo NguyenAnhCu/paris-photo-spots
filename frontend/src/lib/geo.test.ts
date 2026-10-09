@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { circlePolygon, formatCoords, haversineMeters, isInBBox, isValidLngLat, roundBBox, type LngLat } from './geo'
+import {
+  circlePolygon,
+  formatCoords,
+  haversineMeters,
+  isInBBox,
+  isValidLngLat,
+  roundBBox,
+  viewBoundsAt,
+  type LngLat,
+} from './geo'
 
 const EIFFEL: LngLat = [2.2945, 48.8584]
 const NOTRE_DAME: LngLat = [2.3499, 48.853]
@@ -42,5 +51,37 @@ describe('geo', () => {
     expect(ring).toHaveLength(17)
     expect(ring[0]).toEqual(ring[16])
     for (const p of ring) expect(haversineMeters(EIFFEL, p as LngLat)).toBeCloseTo(500, -1)
+  })
+})
+
+describe('viewBoundsAt (the map area before the map has loaded)', () => {
+  it('desktop 1440 × 900, zoom 12 on central Paris, panel 456 px: the area right of the panel', () => {
+    const [w, s, e, n] = viewBoundsAt({
+      center: [2.3322, 48.8566],
+      zoom: 12,
+      width: 1440,
+      height: 900,
+      leftPadding: 456,
+    })
+    // 512-px tiles: 360° / (512 · 2^12) per pixel; the centre sits in the middle of the uncovered area.
+    const perPx = 360 / (512 * 2 ** 12)
+    expect(w).toBeCloseTo(2.3322 - 492 * perPx, 6)
+    expect(e).toBeCloseTo(2.3322 + 492 * perPx, 6)
+    expect(s).toBeLessThan(48.8566)
+    expect(n).toBeGreaterThan(48.8566)
+    // Mercator: north of the centre takes a little less latitude than south.
+    expect(n - 48.8566).toBeLessThan(48.8566 - s)
+    expect(n - s).toBeCloseTo(900 * perPx * Math.cos((48.8566 * Math.PI) / 180), 3)
+  })
+
+  it('phone without a panel: centred on the middle of the screen', () => {
+    const [w, , e] = viewBoundsAt({ center: [2.3322, 48.8566], zoom: 12, width: 390, height: 844, leftPadding: 0 })
+    expect((w + e) / 2).toBeCloseTo(2.3322, 6)
+  })
+
+  it('a panel wider than the map is ignored (whole map counts)', () => {
+    const a = viewBoundsAt({ center: [2.3, 48.8], zoom: 12, width: 300, height: 600, leftPadding: 456 })
+    const b = viewBoundsAt({ center: [2.3, 48.8], zoom: 12, width: 300, height: 600, leftPadding: 0 })
+    expect(a).toEqual(b)
   })
 })

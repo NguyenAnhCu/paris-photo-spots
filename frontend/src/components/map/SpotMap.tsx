@@ -17,7 +17,8 @@ import type { ExpressionSpecification, GeoJSONSource } from 'maplibre-gl'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { config } from '@/config'
 import { useI18n } from '@/i18n/useI18n'
-import type { LngLat } from '@/lib/geo'
+import type { BBox, LngLat } from '@/lib/geo'
+import { bboxOfPoints } from '@/lib/listScope'
 import { SPOT_CATEGORIES, type SpotCategory, type SpotCollection } from '@/types/spot'
 import { PIN_COLOR, pinSvg, registerPinImages } from './pins'
 import './SpotMap.css'
@@ -34,6 +35,7 @@ type SpotMapProps = {
   onSelect: (id: string) => void
   onHover?: (id: string | null) => void
   onPlace?: (position: LngLat) => void // set when the map is in placement mode
+  onViewChange?: (bounds: BBox) => void // the map area the user can see, after each move
 }
 
 const SOURCE_ID = 'spots'
@@ -86,6 +88,7 @@ export function SpotMap({
   onSelect,
   onHover,
   onPlace,
+  onViewChange,
 }: SpotMapProps) {
   const { t } = useI18n()
   const mapRef = useRef<MapRef>(null)
@@ -147,10 +150,28 @@ export function SpotMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.key])
 
+  // What the user can see: the canvas minus the strip under the desktop panel. Corners, not getBounds(), so the
+  // panel strip is left out and a rotated map still gives the whole visible area.
+  const reportView = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map || !onViewChange) return
+    const { clientWidth: w, clientHeight: h } = map.getContainer()
+    if (w === 0 || h === 0) return
+    const left = leftPadding < w ? leftPadding : 0
+    const corners = [
+      [left, 0],
+      [w, 0],
+      [left, h],
+      [w, h],
+    ].map(([x, y]) => map.unproject([x ?? 0, y ?? 0]))
+    onViewChange(bboxOfPoints(corners.map((c) => [c.lng, c.lat])))
+  }, [leftPadding, onViewChange])
+
   // The panel width changes with the breakpoint: keep the visual centre consistent.
   useEffect(() => {
     mapRef.current?.getMap().setPadding({ left: leftPadding, top: 0, right: 0, bottom: 0 })
-  }, [leftPadding])
+    reportView()
+  }, [leftPadding, reportView])
 
   const handleLoad = useCallback(() => {
     const map = mapRef.current?.getMap()
@@ -163,10 +184,11 @@ export function SpotMap({
       flyToFocus(pendingFocus.current)
       pendingFocus.current = null
     }
+    reportView()
     registerPinImages(map, SPOT_CATEGORIES)
       .then(() => setImagesReady(true))
       .catch((err: unknown) => console.error('Pin images failed', err))
-  }, [flyToFocus])
+  }, [flyToFocus, reportView])
 
   const handleClick = useCallback(
     async (e: MapLayerMouseEvent) => {
@@ -238,6 +260,8 @@ export function SpotMap({
         onClick={handleClick}
         onMouseMove={handleMove}
         onMouseLeave={() => onHover?.(null)}
+        onMoveEnd={reportView}
+        onResize={reportView}
         attributionControl={false}
         locale={{
           'NavigationControl.ZoomIn': t('map.control.zoomIn'),

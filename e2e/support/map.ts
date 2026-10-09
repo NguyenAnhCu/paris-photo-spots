@@ -17,6 +17,7 @@ type MapLike = {
   triggerRepaint(): void
   getLayer(id: string): unknown
   getZoom(): number
+  jumpTo(options: { center: [number, number]; zoom: number }): void
   getCenter(): { lng: number; lat: number }
   getBounds(): { contains(p: [number, number]): boolean }
   project(p: [number, number]): { x: number; y: number }
