@@ -73,6 +73,16 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Docker Hub sometimes times out (2026-10-09: twice in a row on the token request). Pull with retries first:
+      # Testcontainers only pulls an image the runner does not have. Same tag as backend/test/integration/globalSetup.ts.
+      - name: Pull the PostGIS image (with retries)
+        run: |
+          for attempt in 1 2 3 4 5; do
+            docker pull postgis/postgis:17-3.4 && exit 0
+            echo "Pull failed (attempt $attempt), retrying in $((attempt * 15)) s"
+            sleep $((attempt * 15))
+          done
+          exit 1
       # Testcontainers starts postgis/postgis:17-3.4 on the runner's Docker and runs the migrations.
       # Unit tests run again here (≈ 1 s) so the coverage covers the whole backend.
       - name: Backend unit + integration tests (PostGIS, with coverage)
